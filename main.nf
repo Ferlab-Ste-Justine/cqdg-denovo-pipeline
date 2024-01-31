@@ -1,13 +1,10 @@
-referenceGenome = file(params.referenceGenome)
-vepCache = file(params.vepCache)
-file(params.finalDestination).mkdirs()
-
 process combineGVCF {
     label 'medium'
 
     container 'broadinstitute/gatk'
     input:
     tuple val(familyId), path(gvcfFiles)
+    path referenceGenome
 
     output:
     tuple val(familyId), path("*combined.gvcf.gz*")
@@ -29,6 +26,7 @@ process genotypeGVCF {
 
     input:
     tuple val(familyId), path(gvcfFile)
+    path referenceGenome
 
     output:
     tuple val(familyId), path("*genotyped.vcf.gz*")
@@ -49,6 +47,7 @@ process splitMultiAllelics{
     
     input:
     tuple val(familyId), path(vcfFile)
+    path referenceGenome
 
     output:
     tuple val(familyId), path("*splitted.vcf*")
@@ -68,6 +67,8 @@ process vep {
 
     input:
     tuple val(familyId), path(vcfFile)
+    path referenceGenome
+    path vepCache
 
     output:
     path "*vep.vcf.gz"
@@ -126,12 +127,14 @@ def sampleChannel() {
 workflow {
     
     familiesAndFiles = sampleChannel()
-
+    referenceGenome = file(params.referenceGenome)
+    vepCache = file(params.vepCache)
+    file(params.finalDestination).mkdirs()
     familiesAndFiles | view
-    combineGVCF(familiesAndFiles) | view
-    genotypeGVCF(combineGVCF.out) | view
-    splitMultiAllelics(genotypeGVCF.out) | view
-    vep(splitMultiAllelics.out) | view
+    combineGVCF(familiesAndFiles, referenceGenome) | view
+    genotypeGVCF(combineGVCF.out, referenceGenome) | view
+    splitMultiAllelics(genotypeGVCF.out, referenceGenome) | view
+    vep(splitMultiAllelics.out, referenceGenome, vepCache) | view
     tabix(vep.out) | view
 
 
