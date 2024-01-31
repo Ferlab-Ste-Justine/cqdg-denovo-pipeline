@@ -63,10 +63,8 @@ process splitMultiAllelics{
 
 process vep {
     label 'vep'
-
     container 'ensemblorg/ensembl-vep'
-    
-    publishDir: "${params.finalDestination}", mode: 'copy'
+    publishDir "${params.finalDestination}", mode: 'copy'
 
     input:
     tuple val(familyId), path(vcfFile)
@@ -103,10 +101,8 @@ process vep {
 
 process tabix {
     label 'tiny'
-
     container 'staphb/htslib'
-
-    publishDir: "${params.finalDestination}", mode: 'copy'
+    publishDir "${params.finalDestination}", mode: 'copy'
 
     input:
     path vcfFile
