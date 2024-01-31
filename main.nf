@@ -72,7 +72,7 @@ process vep {
     path vepCache
 
     output:
-    path "*vep.vcf*"
+    path "*vep.vcf.gz"
 
     script:
     def exactVcfFile = vcfFile.find { it.name.endsWith("vcf.gz") }
