@@ -86,7 +86,7 @@ process vep {
     --input_file $exactVcfFile \
     --format vcf \
     --vcf \
-    --output_file ${familyId}.vep.vcf.gz \
+    --output_file variants.${familyId}.vep.vcf.gz \
     --compress_output bgzip \
     --xref_refseq \
     --variant_class \
