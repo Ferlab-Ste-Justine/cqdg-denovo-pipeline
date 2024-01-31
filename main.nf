@@ -1,19 +1,22 @@
+referenceGenome = file(params.referenceGenome)
+vepCache = file(params.vepCache)
+file(params.finalDestination).mkdirs()
+
 process combineGVCF {
     label 'medium'
 
     container 'broadinstitute/gatk'
     input:
-    val familyId
-    path gvcfFiles
-    path referenceGenome
+    tuple val(familyId), path(gvcfFiles)
 
     output:
-    path "*combined.gvcf.gz*"
+    tuple val(familyId), path("*combined.gvcf.gz*")
 
     script:
     def exactGvcfFiles = gvcfFiles.findAll { it.name.endsWith("gvcf.gz") }.collect { "--variant $it" }.join(' ')
 
     """
+    echo $familyId > file
     gatk CombineGVCFs -R $referenceGenome/${params.referenceGenomeFasta} $exactGvcfFiles -O ${familyId}.combined.gvcf.gz
     """    
 
@@ -25,16 +28,15 @@ process genotypeGVCF {
     container 'broadinstitute/gatk'
 
     input:
-    val familyId
-    path gvcfFile
-    path referenceGenome
+    tuple val(familyId), path(gvcfFile)
 
     output:
-    path "*genotyped.vcf.gz*"
+    tuple val(familyId), path("*genotyped.vcf.gz*")
 
     script:
     def exactGvcfFile = gvcfFile.find { it.name.endsWith("gvcf.gz") }
     """
+    echo $familyId > file
     gatk --java-options "-Xmx24g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} -V $exactGvcfFile -O ${familyId}.genotyped.vcf.gz
     """
 
@@ -46,16 +48,15 @@ process splitMultiAllelics{
     container 'broadinstitute/gatk:4.1.4.1'
     
     input:
-    val familyId
-    path vcfFile
-    path referenceGenome
+    tuple val(familyId), path(vcfFile)
 
     output:
-    path "*splitted.vcf*"
+    tuple val(familyId), path("*splitted.vcf*")
 
     script:
     def exactVcfFile = vcfFile.find { it.name.endsWith("vcf.gz") }
     """
+    echo $familyId > file
     gatk LeftAlignAndTrimVariants -R $referenceGenome/${params.referenceGenomeFasta} -V $exactVcfFile -O ${familyId}.splitted.vcf.gz --split-multi-allelics
     """
 }
@@ -65,11 +66,10 @@ process vep {
 
     container 'ensemblorg/ensembl-vep'
     
+    publishDir: "${params.finalDestination}", mode: 'copy'
+
     input:
-    val familyId
-    path vcfFile
-    path referenceGenome
-    path vepCache
+    tuple val(familyId), path(vcfFile)
 
     output:
     path "*vep.vcf.gz"
@@ -106,6 +106,8 @@ process tabix {
 
     container 'staphb/htslib'
 
+    publishDir: "${params.finalDestination}", mode: 'copy'
+
     input:
     path vcfFile
 
@@ -117,54 +119,25 @@ process tabix {
     tabix $vcfFile
     """
 
-}
-
-process copyFinalDestination {
-    label 'tiny'
-
-    input:
-    path destination
-    path vcfFile
-    path tbiFile
-
-    output:
-    stdout
-
-    script:
-    """
-    cp -f $vcfFile $destination/
-    cp -f $tbiFile $destination/
-    """
-
-}    
+} 
 
 def sampleChannel() {
    return Channel.fromPath(file("$params.sampleFile"))
-               .splitCsv(sep: '\t');
+               .splitCsv(sep: '\t')
+               .map { tuple(it.first(), it.tail().collect{ f -> file("${f}*")}.flatten()) };
 }
 
 workflow {
+    
+    familiesAndFiles = sampleChannel()
 
-    families = sampleChannel()
-               .map { it[0] }
-
-    gvcfs = sampleChannel()
-               .map { it.tail().collect{ f -> file("${f}*")}.flatten()}       
-
-    referenceGenome = file(params.referenceGenome)
-    vepCache = file(params.vepCache)
-    finalDestination = file(params.finalDestination)
-
-    finalDestination.mkdirs()
-    families | view
-    gvcfs | view
-    combineGVCF(families, gvcfs, referenceGenome) | view
-    genotypeGVCF(families, combineGVCF.out, referenceGenome) | view
-    splitMultiAllelics(families, genotypeGVCF.out, referenceGenome) | view
-    vep(families, splitMultiAllelics.out, referenceGenome, vepCache) | view
+    familiesAndFiles | view
+    combineGVCF(familiesAndFiles) | view
+    genotypeGVCF(combineGVCF.out) | view
+    splitMultiAllelics(genotypeGVCF.out) | view
+    vep(splitMultiAllelics.out) | view
     tabix(vep.out) | view
 
-    copyFinalDestination(finalDestination, vep.out, tabix.out)
 
 
 }
