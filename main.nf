@@ -104,7 +104,7 @@ process vep {
 process tabix {
     label 'small'
 
-    container 'biocontainers/tabix:v1.9-11-deb_cv1'
+    container 'staphb/htslib'
 
     input:
     path vcfFile
