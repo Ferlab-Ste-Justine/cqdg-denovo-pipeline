@@ -138,8 +138,10 @@ process copyFinalDestination {
 
 }    
 
-def sampleChannel() = Channel.fromPath(file("$params.sampleFile"))
-               .splitCsv(sep: '\t')
+def sampleChannel() {
+   return Channel.fromPath(file("$params.sampleFile"))
+               .splitCsv(sep: '\t');
+}
 
 workflow {
 
