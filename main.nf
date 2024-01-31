@@ -43,7 +43,7 @@ process genotypeGVCF {
 process splitMultiAllelics{
     label 'medium'
 
-    container 'broadinstitute/gatk'
+    container 'broadinstitute/gatk:4.1.4.1'
     
     input:
     val familyId
