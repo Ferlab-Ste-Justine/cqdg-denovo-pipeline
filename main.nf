@@ -14,7 +14,7 @@ process combineGVCF {
     def exactGvcfFiles = gvcfFiles.findAll { it.name.endsWith("gvcf.gz") }.collect { "--variant $it" }.join(' ')
 
     """
-    gatk CombineGVCFs -R $referenceGenome/Homo_sapiens_assembly38.fasta $exactGvcfFiles -O ${familyId}.combined.gvcf.gz
+    gatk CombineGVCFs -R $referenceGenome/${params.referenceGenomeFasta} $exactGvcfFiles -O ${familyId}.combined.gvcf.gz
     """    
 
 }    
@@ -35,7 +35,7 @@ process genotypeGVCF {
     script:
     def exactGvcfFile = gvcfFile.find { it.name.endsWith("gvcf.gz") }
     """
-    gatk --java-options "-Xmx24g" GenotypeGVCFs -R $referenceGenome/Homo_sapiens_assembly38.fasta -V $exactGvcfFile -O ${familyId}.genotyped.vcf.gz
+    gatk --java-options "-Xmx24g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} -V $exactGvcfFile -O ${familyId}.genotyped.vcf.gz
     """
 
 }
@@ -56,7 +56,7 @@ process splitMultiAllelics{
     script:
     def exactVcfFile = vcfFile.find { it.name.endsWith("vcf.gz") }
     """
-    gatk LeftAlignAndTrimVariants -R $referenceGenome/Homo_sapiens_assembly38.fasta -V $exactVcfFile -O ${familyId}.splitted.vcf.gz --split-multi-allelics
+    gatk LeftAlignAndTrimVariants -R $referenceGenome/${params.referenceGenomeFasta} -V $exactVcfFile -O ${familyId}.splitted.vcf.gz --split-multi-allelics
     """
 }
 
@@ -78,11 +78,11 @@ process vep {
     def exactVcfFile = vcfFile.find { it.name.endsWith("vcf.gz") }
     """
     vep \
-    --fork ${params.vep_cpu} \
+    --fork ${params.vepCpu} \
     --dir ${vepCache} \
     --offline \
     --cache \
-    --fasta $referenceGenome/Homo_sapiens_assembly38.fasta \
+    --fasta $referenceGenome/${params.referenceGenomeFasta} \
     --input_file $exactVcfFile \
     --format vcf \
     --vcf \
@@ -102,7 +102,7 @@ process vep {
 }
 
 process tabix {
-    label 'small'
+    label 'tiny'
 
     container 'staphb/htslib'
 
@@ -120,7 +120,7 @@ process tabix {
 }
 
 process copyFinalDestination {
-    label 'small'
+    label 'tiny'
 
     input:
     path destination
@@ -138,21 +138,20 @@ process copyFinalDestination {
 
 }    
 
-
+def sampleChannel() = Channel.fromPath(file("$params.sampleFile"))
+               .splitCsv(sep: '\t')
 
 workflow {
 
-    families = Channel.fromPath(file("$params.inputDir/samples.txt"))
-               .splitCsv(sep: '\t')
-               .map { it[0]}
+    families = sampleChannel()
+               .map { it[0] }
 
-    gvcfs = Channel.fromPath(file("$params.inputDir/samples.txt"))
-               .splitCsv(sep: '\t')
-               .map { it.tail().collect{ e -> file("${params.inputDir}/${e}*")}.flatten()}       
+    gvcfs = sampleChannel()
+               .map { it.tail().collect{ f -> file("${f}*")}.flatten()}       
 
     referenceGenome = file(params.referenceGenome)
-    vepCache = file("s3://cqdg-prod-file-import/nextflow/vep")
-    finalDestination = file("s3://cqdg-prod-file-import/nextflow/output")
+    vepCache = file(params.vepCache)
+    finalDestination = file(params.finalDestination)
 
     finalDestination.mkdirs()
     families | view
