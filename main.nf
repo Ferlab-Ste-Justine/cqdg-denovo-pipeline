@@ -55,8 +55,9 @@ process splitMultiAllelics{
     script:
     def exactVcfFile = vcfFile.find { it.name.endsWith("vcf.gz") }
     """
+    set -e
     echo $familyId > file
-    bcftools norm --write-index -c w -m -any -f $referenceGenome/${params.referenceGenomeFasta} --output-type z --output ${familyId}.normed.vcf.gz ${exactVcfFile} 
+    bcftools annotate -x FORMAT/PRI ${exactVcfFile} | bcftools norm --write-index -c w -m -any -f $referenceGenome/${params.referenceGenomeFasta} --old-rec-tag OLD_RECORD --output-type z --output ${familyId}.normed.vcf.gz  
     bcftools view --min-ac 1 --output-type z --output ${familyId}.splitted.vcf.gz ${familyId}.normed.vcf.gz
     bcftools index -t ${familyId}.splitted.vcf.gz
     """
