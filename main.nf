@@ -43,7 +43,7 @@ process genotypeGVCF {
 process splitMultiAllelics{
     label 'medium'
 
-    container 'broadinstitute/gatk:4.1.4.1'
+    container 'staphb/bcftools'
     
     input:
     tuple val(familyId), path(vcfFile)
@@ -56,7 +56,8 @@ process splitMultiAllelics{
     def exactVcfFile = vcfFile.find { it.name.endsWith("vcf.gz") }
     """
     echo $familyId > file
-    gatk LeftAlignAndTrimVariants -R $referenceGenome/${params.referenceGenomeFasta} -V $exactVcfFile -O ${familyId}.splitted.vcf.gz --split-multi-allelics
+    bcftools norm -c w -m -any -f $referenceGenome/${params.referenceGenomeFasta} ${exactVcfFile} | bcftools view --min-ac 1 --output-type z --output ${familyId}.splitted.vcf.gz
+    bcftools index -t ${familyId}.splitted.vcf.gz
     """
 }
 
