@@ -133,7 +133,7 @@ workflow {
     referenceGenome = file(params.referenceGenome)
     vepCache = file(params.vepCache)
     file(params.outputDir).mkdirs()
-    familiesAndFiles | view
+    familiesAndFiles
     combineGVCF(familiesAndFiles, referenceGenome) | view
     genotypeGVCF(combineGVCF.out, referenceGenome) | view
     splitMultiAllelics(genotypeGVCF.out, referenceGenome) | view
