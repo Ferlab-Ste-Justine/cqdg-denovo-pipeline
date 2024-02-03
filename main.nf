@@ -1,3 +1,26 @@
+process excludeMNPs{
+    label 'medium'
+
+    container 'staphb/bcftools'
+    
+    input:
+    tuple val(familyId), path(gvcfFile)
+
+    output:
+    tuple val(familyId), path("*filtered.gvcf.gz*")
+
+    script:
+    def exactGvcfFile = gvcfFile.find { it.name.endsWith("gvcf.gz") }
+    def uuid = UUID.randomUUID().toString()
+    """
+    set -e
+    echo $familyId > file
+    bcftools view --exclude-types mnps ${exactGvcfFile} -O z -o ${familyId}.${uuid}.filtered.gvcf.gz
+    bcftools index -t ${familyId}.${uuid}.filtered.gvcf.gz
+    """
+}
+
+
 process combineGVCF {
     label 'medium'
 
@@ -124,22 +147,20 @@ process tabix {
 def sampleChannel() {
    return Channel.fromPath(file("$params.sampleFile"))
                .splitCsv(sep: '\t')
-               .map { tuple(it.first(), it.tail().collect{ f -> file("${f}*")}.flatten()) };
+               .flatMap { it.tail().collect{ f -> tuple(groupKey(it.first(), it.tail().size()),  file("${f}*")) } }
 }
 
 workflow {
-    
-    familiesAndFiles = sampleChannel()
     referenceGenome = file(params.referenceGenome)
     vepCache = file(params.vepCache)
     file(params.outputDir).mkdirs()
-    familiesAndFiles
-    combineGVCF(familiesAndFiles, referenceGenome) | view
-    genotypeGVCF(combineGVCF.out, referenceGenome) | view
-    splitMultiAllelics(genotypeGVCF.out, referenceGenome) | view
-    vep(splitMultiAllelics.out, referenceGenome, vepCache) | view
-    tabix(vep.out) | view
 
-
+    familiesAndFiles = sampleChannel()
+    filtered = excludeMNPs(familiesAndFiles).groupTuple().map{ familyId, files -> tuple(familyId, files.flatten())}
+    combineGVCF(filtered, referenceGenome) 
+    genotypeGVCF(combineGVCF.out, referenceGenome) 
+    splitMultiAllelics(genotypeGVCF.out, referenceGenome) 
+    vep(splitMultiAllelics.out, referenceGenome, vepCache) 
+    tabix(vep.out) 
 
 }
