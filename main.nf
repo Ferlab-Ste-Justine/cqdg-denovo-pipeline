@@ -144,10 +144,21 @@ process tabix {
 
 } 
 
+/**
+Parse a tsv and return multiple chanels with 
+    - sizes : size by family id
+    - files : files by family id
+*/
 def sampleChannel() {
-   return Channel.fromPath(file("$params.sampleFile"))
+   Channel.fromPath(file("$params.sampleFile"))
                .splitCsv(sep: '\t')
-               .flatMap { it.tail().findAll{ c -> c?.trim() }.collect{ f -> tuple(groupKey(it.first(), it.tail().size()),  file("${f}*")) } }
+               .flatMap { it ->
+                    files = it.tail().findAll{ c -> c?.trim() };
+                    return files.collect{ f -> [familyId: it.first(), size: files.size(), file: f ]}; 
+                }.multiMap { it ->
+                    sizes: tuple(it.familyId, it.size)
+                    files: tuple(it.familyId, file("${it.file}*"))
+                }                
 }
 
 workflow {
@@ -155,9 +166,14 @@ workflow {
     vepCache = file(params.vepCache)
     file(params.outputDir).mkdirs()
 
-    familiesAndFiles = sampleChannel()
-    familiesAndFiles | view
-    filtered = excludeMNPs(familiesAndFiles).groupTuple().map{ familyId, files -> tuple(familyId, files.flatten())}
+    sampleChannel().set{ familiesSizeFile }
+    
+    filtered = excludeMNPs(familiesSizeFile.files)
+                    .join(familiesSizeFile.sizes)
+                    .map{familyId, files, size -> tuple( groupKey(familyId, size), files)}
+                    .groupTuple()
+                    .map{ familyId, files -> tuple(familyId, files.flatten())}
+
     combineGVCF(filtered, referenceGenome) 
     genotypeGVCF(combineGVCF.out, referenceGenome) 
     splitMultiAllelics(genotypeGVCF.out, referenceGenome) 
