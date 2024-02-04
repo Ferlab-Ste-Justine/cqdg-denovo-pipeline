@@ -147,7 +147,7 @@ process tabix {
 def sampleChannel() {
    return Channel.fromPath(file("$params.sampleFile"))
                .splitCsv(sep: '\t')
-               .flatMap { it.tail().collect{ f -> tuple(groupKey(it.first(), it.tail().size()),  file("${f}*")) } }
+               .flatMap { it.tail().filter( it?.trim() ).collect{ f -> tuple(groupKey(it.first(), it.tail().size()),  file("${f}*")) } }
 }
 
 workflow {
