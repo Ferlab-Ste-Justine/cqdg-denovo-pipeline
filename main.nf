@@ -156,6 +156,7 @@ workflow {
     file(params.outputDir).mkdirs()
 
     familiesAndFiles = sampleChannel()
+    familiesAndFiles | view
     filtered = excludeMNPs(familiesAndFiles).groupTuple().map{ familyId, files -> tuple(familyId, files.flatten())}
     combineGVCF(filtered, referenceGenome) 
     genotypeGVCF(combineGVCF.out, referenceGenome) 
