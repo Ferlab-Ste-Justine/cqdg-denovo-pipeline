@@ -175,9 +175,9 @@ workflow {
                     .map{ familyId, files -> tuple(familyId, files.flatten())}
 
     combineGVCF(filtered, referenceGenome) 
-    // genotypeGVCF(combineGVCF.out, referenceGenome) 
-    // splitMultiAllelics(genotypeGVCF.out, referenceGenome) 
-    // vep(splitMultiAllelics.out, referenceGenome, vepCache) 
-    // tabix(vep.out) 
+    genotypeGVCF(combineGVCF.out, referenceGenome) 
+    splitMultiAllelics(genotypeGVCF.out, referenceGenome) 
+    vep(splitMultiAllelics.out, referenceGenome, vepCache) 
+    tabix(vep.out) 
 
 }
