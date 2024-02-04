@@ -15,7 +15,7 @@ process excludeMNPs{
     """
     set -e
     echo $familyId > file
-    bcftools view --exclude-types mnps ${exactGvcfFile} -O z -o ${familyId}.${uuid}.filtered.gvcf.gz
+    bcftools view --regions chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,chrY ${exactGvcfFile} -O z -o ${familyId}.${uuid}.filtered.gvcf.gz
     bcftools index -t ${familyId}.${uuid}.filtered.gvcf.gz
     """
 }
@@ -175,9 +175,9 @@ workflow {
                     .map{ familyId, files -> tuple(familyId, files.flatten())}
 
     combineGVCF(filtered, referenceGenome) 
-    genotypeGVCF(combineGVCF.out, referenceGenome) 
-    splitMultiAllelics(genotypeGVCF.out, referenceGenome) 
-    vep(splitMultiAllelics.out, referenceGenome, vepCache) 
-    tabix(vep.out) 
+    // genotypeGVCF(combineGVCF.out, referenceGenome) 
+    // splitMultiAllelics(genotypeGVCF.out, referenceGenome) 
+    // vep(splitMultiAllelics.out, referenceGenome, vepCache) 
+    // tabix(vep.out) 
 
 }
