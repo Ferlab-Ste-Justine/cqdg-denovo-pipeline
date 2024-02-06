@@ -245,7 +245,7 @@ workflow {
     genotypeGVCF(importGVCF.out, referenceGenome) | view 
     v = variantRecalibratorSNP(genotypeGVCF.out, referenceGenome, broad).join(genotypeGVCF.out)
     v | view
-    // applyVQSRSNP(v)
+    applyVQSRSNP(v) | view
 
     // splitMultiAllelics(genotypeGVCF.out, referenceGenome) | view 
     // vep(splitMultiAllelics.out, referenceGenome, vepCache) 
