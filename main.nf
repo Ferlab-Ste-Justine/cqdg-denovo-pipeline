@@ -114,7 +114,7 @@ process applyVQSRSNP {
 
     script:
     def exactVcfFile = vcf.find { it.name.endsWith("vcf.gz") }
-    def exactRecal = vcf.find { it.name.endsWith("recal") }
+    def exactRecal = recal.find { it.name.endsWith("recal") }
     """
     gatk --java-options "-Xms2G -Xmx2G -XX:ParallelGCThreads=2" ApplyVQSR \
     -V ${exactVcfFile} \
