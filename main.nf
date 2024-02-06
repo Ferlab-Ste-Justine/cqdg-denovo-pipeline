@@ -243,7 +243,7 @@ workflow {
     filtered | view
     importGVCF(filtered, referenceGenome) | view
     genotypeGVCF(importGVCF.out, referenceGenome) | view 
-    v = variantRecalibratorSNP(genotypeGVCF.out, referenceGenome, broad)//.join(genotypeGVCF.out)
+    v = variantRecalibratorSNP(genotypeGVCF.out, referenceGenome, broad).join(genotypeGVCF.out)
     v | view
     // applyVQSRSNP(v)
 
