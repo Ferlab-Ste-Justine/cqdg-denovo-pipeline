@@ -100,33 +100,33 @@ process variantRecalibratorSNP {
 
 }
 
-process applyVQSRSNP {
-    label 'geno'
+// process applyVQSRSNP {
+//     label 'geno'
 
-    container 'broadinstitute/gatk'
-    publishDir "${params.outputDir}", mode: 'copy'
+//     container 'broadinstitute/gatk'
+//     publishDir "${params.outputDir}", mode: 'copy'
 
-    input:
-    tuple val(prefix), path(recal), path(tranches), path(vcf)
+//     input:
+//     tuple val(prefix), path(recal), path(tranches), path(vcf)
 
-    output:
-    path("*.snp.vqsr.vcf.gz*")
+//     output:
+//     path("*.snp.vqsr.vcf.gz*")
 
-    script:
-    def exactVcfFile = vcf.find { it.name.endsWith("vcf.gz") }
-    def exactRecal = vcf.find { it.name.endsWith("recal") }
-    """
-    gatk --java-options "-Xms2G -Xmx2G -XX:ParallelGCThreads=2" ApplyVQSR \
-    -V ${exactVcfFile} \
-    --recal-file ${exactRecal} \
-    -mode SNP \
-    --tranches-file ${tranches} \
-    --truth-sensitivity-filter-level 99.9 \
-    --create-output-variant-index true \
-    -O ${prefix}.snp.vqsr.vcf.gz
-    """
+//     script:
+//     def exactVcfFile = vcf.find { it.name.endsWith("vcf.gz") }
+//     def exactRecal = vcf.find { it.name.endsWith("recal") }
+//     """
+//     gatk --java-options "-Xms2G -Xmx2G -XX:ParallelGCThreads=2" ApplyVQSR \
+//     -V ${exactVcfFile} \
+//     --recal-file ${exactRecal} \
+//     -mode SNP \
+//     --tranches-file ${tranches} \
+//     --truth-sensitivity-filter-level 99.9 \
+//     --create-output-variant-index true \
+//     -O ${prefix}.snp.vqsr.vcf.gz
+//     """
 
-}
+// }
 
 process splitMultiAllelics{
     label 'medium'
@@ -243,7 +243,9 @@ workflow {
     filtered | view
     importGVCF(filtered, referenceGenome) | view
     genotypeGVCF(importGVCF.out, referenceGenome) | view 
-    variantRecalibratorSNP(genotypeGVCF.out, referenceGenome, broad)
+    v = variantRecalibratorSNP(genotypeGVCF.out, referenceGenome, broad)//.join(genotypeGVCF.out)
+    v | view
+    // applyVQSRSNP(v)
 
     // splitMultiAllelics(genotypeGVCF.out, referenceGenome) | view 
     // vep(splitMultiAllelics.out, referenceGenome, vepCache) 
