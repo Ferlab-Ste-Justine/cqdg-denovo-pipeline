@@ -1,3 +1,7 @@
+
+
+nextflow.enable.dsl = 2
+
 /**
 Exclude MNPs detected with bedtools
 */
@@ -17,10 +21,11 @@ process excludeMNPs{
     def exactGvcfFile = gvcfFile.find { it.name.endsWith("gvcf.gz") }
     def uuid = UUID.randomUUID().toString()
     // --regions chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,chrY
+    // bcftools view --exclude-type mnps  ${exactGvcfFile} -O z -o ${familyId}.${uuid}.filtered.gvcf.gz
     """
     set -e
     echo $familyId > file
-    bcftools view --exclude-type mnps  ${exactGvcfFile} -O z -o ${familyId}.${uuid}.filtered.gvcf.gz
+    bcftools filter -e 'strlen(REF)>1 & strlen(REF)==strlen(ALT) & TYPE="snp"' ${exactGvcfFile} | bcftools norm -d any -O z -o ${familyId}.${uuid}.filtered.gvcf.gz
     bcftools index -t ${familyId}.${uuid}.filtered.gvcf.gz
     """
 }
@@ -44,7 +49,8 @@ process importGVCF {
     """
     echo $familyId > file
  
-    gatk --java-options "-Xmx4g -Xms4g" GenomicsDBImport $exactGvcfFiles --genomicsdb-workspace-path genomicsdb -L ${broadResource}/${params.intervalsFile}  """    
+    gatk --java-options "-Xmx4g -Xms4g" GenomicsDBImport $exactGvcfFiles --genomicsdb-workspace-path genomicsdb -L ${broadResource}/${params.intervalsFile}  
+    """    
 
 }    
 
@@ -104,39 +110,31 @@ include { tabix                     } from './modules/vep'
 
 
 workflow {
-    referenceGenome = file(params.referenceGenome)
-    broad = file(params.broad)
-    vepCache = file(params.vepCache)
+    referenceGenome = Channel.fromPath(params.referenceGenome)
+    broad = Channel.fromPath(params.broad)
+    vepCache = Channel.fromPath(params.vepCache)
     file(params.outputDir).mkdirs()
 
     sampleChannel().set{ familiesSizeFile }
-    
+
     filtered = excludeMNPs(familiesSizeFile.files)
                     .join(familiesSizeFile.sizes)
                     .map{familyId, files, size -> tuple( groupKey(familyId, size), files)}
                     .groupTuple()
                     .map{ familyId, files -> tuple(familyId, files.flatten())}
     
-    // filtered | view
 
     importGVCF(filtered, referenceGenome,broad)
 
     vcf = genotypeGVCF(importGVCF.out, referenceGenome,broad)
-    // vcf | view
-    
 
     v = variantRecalibratorSNP(vcf, referenceGenome, broad).join(vcf)
-    // v | view
     asnp = applyVQSRSNP(v) 
-    // asnp | view
 
     indel = variantRecalibratorIndel(vcf, referenceGenome, broad).join(asnp)
-    // indel | view
     aindel = applyVQSRIndel(indel)
-    // aindel | view
 
     s = splitMultiAllelics(aindel, referenceGenome) 
-    // s | view 
 
     vep(s, referenceGenome, vepCache) 
     tabix(vep.out) 

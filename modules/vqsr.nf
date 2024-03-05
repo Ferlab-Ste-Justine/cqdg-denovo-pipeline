@@ -13,7 +13,7 @@ process variantRecalibratorSNP {
     tuple val(prefix), path("*.recal*"), path("*.tranches")
     
     script:
-    def tranches = ["100.0", "99.95", "99.9", "99.8", "99.6", "99.5", "99.4", "99.3", "99.0", "98.0", "97.0", "90.0"].collect{"-tranche $it"}.join(' ')
+    def tranches = ["100.0", "99.95", "99.9", "99.8", "99.6", "99.5", "99.4", "99.3", "99.0"].collect{"-tranche $it"}.join(' ')
     def annotationValues = ["QD","MQRankSum","ReadPosRankSum","FS","MQ","SOR","DP"].collect{"-an $it"}.join(' ')
     """
     set -e
@@ -51,7 +51,7 @@ process variantRecalibratorIndel {
     tuple val(prefix), path("*.recal*"), path("*.tranches")
     
     script:
-    def tranches = ["100.0","99.95","99.9","99.5","99.0","97.0","96.0","95.0","94.0","93.5","93.0","92.0","91.0","90.0"].collect{"-tranche $it"}.join(' ')
+    def tranches = ["100.0","99.95","99.9","99.5","99.0","97.0","96.0","95.0","94.0"].collect{"-tranche $it"}.join(' ')
     def annotationValues = ["FS","ReadPosRankSum","MQRankSum","QD","SOR","DP"].collect{"-an $it"}.join(' ')
     """
     set -e
@@ -127,5 +127,26 @@ process applyVQSRIndel {
     --create-output-variant-index true \
     -O ${prefix}.snpindel.vqsr_${params.TSfilter}.vcf.gz
     """
+
+}
+
+
+workflow {
+   referenceGenome = file(params.referenceGenome)
+    broad = file(params.broad)
+    Channel.fromFilePairs("$params.inputDir/*.vcf.gz{,.tbi}")
+        .tap{ vcfs}
+
+
+    v = variantRecalibratorSNP(vcf, referenceGenome, broad).join(vcf)
+    // v | view
+    asnp = applyVQSRSNP(v) 
+    // asnp | view
+
+    indel = variantRecalibratorIndel(vcf, referenceGenome, broad).join(asnp)
+    // indel | view
+    aindel = applyVQSRIndel(indel)
+    // aindel | view
+
 
 }
