@@ -49,7 +49,7 @@ process importGVCF {
     """
     echo $familyId > file
  
-    gatk --java-options "-Xmx4g -Xms4g" GenomicsDBImport $exactGvcfFiles --genomicsdb-workspace-path genomicsdb -L ${broadResource}/${params.intervalsFile}  
+    gatk --java-options "-Xmx26g -Xms26g" GenomicsDBImport $exactGvcfFiles --genomicsdb-workspace-path genomicsdb --genomicsdb-shared-posixfs-optimizations true --bypass-feature-reader -L ${broadResource}/${params.intervalsFile} 
     """    
 
 }    
@@ -75,7 +75,7 @@ process genotypeGVCF {
     def workspace = genomicsdb.getBaseName()
     """
     echo $familyId > file
-    gatk --java-options "-Xmx24g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} -V gendb://$genomicsdb -O ${familyId}.genotyped.vcf.gz -G StandardAnnotation -G AS_StandardAnnotation
+    gatk --java-options "-Xmx26g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} --genomicsdb-shared-posixfs-optimizations true -V gendb://$genomicsdb -O ${familyId}.genotyped.vcf.gz -G StandardAnnotation -G AS_StandardAnnotation
     """
 
 }

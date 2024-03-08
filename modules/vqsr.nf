@@ -18,7 +18,7 @@ process variantRecalibratorSNP {
     """
     set -e
     echo $prefix > file
-    gatk --java-options "-Xms4G -Xmx4G -XX:ParallelGCThreads=2" VariantRecalibrator \
+    gatk --java-options "-Xms4G -Xmx18G -XX:ParallelGCThreads=2" VariantRecalibrator \
     $tranches \
     --trust-all-polymorphic \
     -R $referenceGenome/${params.referenceGenomeFasta} \
@@ -56,7 +56,7 @@ process variantRecalibratorIndel {
     """
     set -e
     echo $prefix > file
-    gatk --java-options "-Xms4G -Xmx4G -XX:ParallelGCThreads=2" VariantRecalibrator \
+    gatk --java-options "-Xms4G -Xmx18G -XX:ParallelGCThreads=2" VariantRecalibrator \
     $tranches \
     -R $referenceGenome/${params.referenceGenomeFasta} \
     -V ${vcf.first()} \
@@ -88,7 +88,7 @@ process applyVQSRSNP {
     """
     set -e
     echo $prefix > file
-    gatk --java-options "-Xms5G -Xmx5G -XX:ParallelGCThreads=2" ApplyVQSR \
+    gatk --java-options "-Xms5G -Xmx18G -XX:ParallelGCThreads=2" ApplyVQSR \
     -V ${exactVcfFile} \
     --recal-file ${exactRecal} \
     -mode SNP \
@@ -118,7 +118,7 @@ process applyVQSRIndel {
     def exactRecal = recal.find { it.name.endsWith("recal") }
     """
     echo $prefix > file
-    gatk --java-options "-Xms5G -Xmx5G -XX:ParallelGCThreads=2" ApplyVQSR \
+    gatk --java-options "-Xms5G -Xmx18G -XX:ParallelGCThreads=2" ApplyVQSR \
     -V ${exactVcfFile} \
     --recal-file ${exactRecal} \
     -mode INDEL \
