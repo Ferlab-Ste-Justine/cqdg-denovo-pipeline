@@ -15,7 +15,7 @@ process excludeMNPs{
     tuple val(familyId), path(gvcfFile)
 
     output:
-    tuple val(familyId), path("*filtered.gvcf.gz*")
+    tuple val(familyId), path("*filtered.vcf.gz*")
 
     script:
     def exactGvcfFile = gvcfFile.find { it.name.endsWith("gvcf.gz") }
@@ -25,8 +25,8 @@ process excludeMNPs{
     """
     set -e
     echo $familyId > file
-    bcftools filter -e 'strlen(REF)>1 & strlen(REF)==strlen(ALT) & TYPE="snp"' ${exactGvcfFile} | bcftools norm -d any -O z -o ${familyId}.${uuid}.filtered.gvcf.gz
-    bcftools index -t ${familyId}.${uuid}.filtered.gvcf.gz
+    bcftools filter -e 'strlen(REF)>1 & strlen(REF)==strlen(ALT) & TYPE="snp"' ${exactGvcfFile} | bcftools norm -d any -O z -o ${familyId}.${uuid}.filtered.vcf.gz
+    bcftools index -t ${familyId}.${uuid}.filtered.vcf.gz
     """
 }
 
@@ -44,7 +44,7 @@ process importGVCF {
     tuple val(familyId), path("genomicsdb")
 
     script:
-    def exactGvcfFiles = gvcfFiles.findAll { it.name.endsWith("gvcf.gz") }.collect { "-V $it" }.join(' ')
+    def exactGvcfFiles = gvcfFiles.findAll { it.name.endsWith("vcf.gz") }.collect { "-V $it" }.join(' ')
 
     """
     echo $familyId > file
