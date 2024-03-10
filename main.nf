@@ -49,7 +49,7 @@ process importGVCF {
 
     """
     echo $familyId > file
-    gatk CombineGVCFs -R $referenceGenome/${params.referenceGenomeFasta} $exactGvcfFiles -O ${familyId}.combined.gvcf.gz -L ${broadResource}/${params.intervalsFile}
+    gatk --java-options "-Xmx8g"  CombineGVCFs -R $referenceGenome/${params.referenceGenomeFasta} $exactGvcfFiles -O ${familyId}.combined.gvcf.gz -L ${broadResource}/${params.intervalsFile}
     """       
 
 }    
