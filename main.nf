@@ -124,7 +124,7 @@ workflow {
     
     importGVCF(filtered, referenceGenome,broad)
 
-    vcf = genotypeGVCF(importGVCF.out, referenceGenome,broad)
+    vcf = genotypeGVCF(importGVCF.out, referenceGenome)
 
     v = variantRecalibratorSNP(vcf, referenceGenome, broad).join(vcf)
     asnp = applyVQSRSNP(v) 
