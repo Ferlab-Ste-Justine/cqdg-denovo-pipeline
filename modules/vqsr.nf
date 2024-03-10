@@ -118,7 +118,7 @@ process applyVQSRIndel {
     def exactRecal = recal.find { it.name.endsWith("recal") }
     """
     echo $prefix > file
-    gatk --java-options "-Xm4G -Xmx4G -XX:ParallelGCThreads=2" ApplyVQSR \
+    gatk --java-options "-Xms4G -Xmx4G -XX:ParallelGCThreads=2" ApplyVQSR \
     -V ${exactVcfFile} \
     --recal-file ${exactRecal} \
     -mode INDEL \

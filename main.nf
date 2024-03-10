@@ -46,9 +46,9 @@ process importGVCF {
     script:
     def exactGvcfFiles = gvcfFiles.findAll { it.name.endsWith("vcf.gz") }.collect { "-V $it" }.join(' ')
 
+    // gatk --java-options "-Xmx5g -Xms5g" GenomicsDBImport $exactGvcfFiles --genomicsdb-workspace-path genomicsdb --max-num-intervals-to-import-in-parallel 4 --genomicsdb-shared-posixfs-optimizations true --bypass-feature-reader -L ${broadResource}/${params.intervalsFile} 
     """
     echo $familyId > file
- 
     gatk --java-options "-Xmx5g -Xms5g" GenomicsDBImport $exactGvcfFiles --genomicsdb-workspace-path genomicsdb --max-num-intervals-to-import-in-parallel 4 --genomicsdb-shared-posixfs-optimizations true --bypass-feature-reader -L ${broadResource}/${params.intervalsFile} 
     """    
 
@@ -75,7 +75,7 @@ process genotypeGVCF {
     def workspace = genomicsdb.getBaseName()
     """
     echo $familyId > file
-    gatk --java-options "-Xmx5g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} --genomicsdb-shared-posixfs-optimizations true -V gendb://$genomicsdb -O ${familyId}.genotyped.vcf.gz -G StandardAnnotation -G AS_StandardAnnotation
+    gatk --java-options "-Xmx28g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} --genomicsdb-shared-posixfs-optimizations true -V gendb://$genomicsdb -O ${familyId}.genotyped.vcf.gz -G StandardAnnotation -G AS_StandardAnnotation
     """
 
 }
@@ -110,9 +110,9 @@ include { tabix                     } from './modules/vep'
 
 
 workflow {
-    referenceGenome = Channel.fromPath(params.referenceGenome)
-    broad = Channel.fromPath(params.broad)
-    vepCache = Channel.fromPath(params.vepCache)
+    referenceGenome = file(params.referenceGenome)
+    broad = file(params.broad)
+    vepCache = file(params.vepCache)
     file(params.outputDir).mkdirs()
 
     sampleChannel().set{ familiesSizeFile }
@@ -123,7 +123,7 @@ workflow {
                     .groupTuple()
                     .map{ familyId, files -> tuple(familyId, files.flatten())}
     
-
+    
     importGVCF(filtered, referenceGenome,broad)
 
     vcf = genotypeGVCF(importGVCF.out, referenceGenome,broad)
