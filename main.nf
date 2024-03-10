@@ -75,7 +75,8 @@ process genotypeGVCF {
     def workspace = genomicsdb.getBaseName()
     """
     echo $familyId > file
-    cp -r $genomicsdb /tmp
+    mkdir /tmp/genomicsdb
+    cp -r $genomicsdb/* /tmp/genomicsdb/
     gatk --java-options "-Xmx28g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} -V gendb:///tmp/genomicsdb -O ${familyId}.genotyped.vcf.gz -G StandardAnnotation -G AS_StandardAnnotation
     """
 
