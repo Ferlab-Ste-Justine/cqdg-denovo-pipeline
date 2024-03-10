@@ -32,7 +32,8 @@ process excludeMNPs{
 
 
 process importGVCF {
-    label 'vep'
+
+    label 'medium'
 
     container 'broadinstitute/gatk'
     input:
@@ -41,16 +42,15 @@ process importGVCF {
     path broadResource
 
     output:
-    tuple val(familyId), path("genomicsdb")
+    tuple val(familyId), path("*combined.gvcf.gz*")
 
     script:
     def exactGvcfFiles = gvcfFiles.findAll { it.name.endsWith("vcf.gz") }.collect { "-V $it" }.join(' ')
 
-    // gatk --java-options "-Xmx5g -Xms5g" GenomicsDBImport $exactGvcfFiles --genomicsdb-workspace-path genomicsdb --max-num-intervals-to-import-in-parallel 4 --genomicsdb-shared-posixfs-optimizations true --bypass-feature-reader -L ${broadResource}/${params.intervalsFile} 
     """
     echo $familyId > file
-    gatk --java-options "-Xmx5g -Xms5g" GenomicsDBImport $exactGvcfFiles --genomicsdb-workspace-path genomicsdb --max-num-intervals-to-import-in-parallel 4 --genomicsdb-shared-posixfs-optimizations true --bypass-feature-reader -L ${broadResource}/${params.intervalsFile} 
-    """    
+    gatk CombineGVCFs -R $referenceGenome/${params.referenceGenomeFasta} $exactGvcfFiles -O ${familyId}.combined.gvcf.gz -L ${broadResource}/${params.intervalsFile}
+    """       
 
 }    
 
@@ -64,22 +64,18 @@ process genotypeGVCF {
     container 'broadinstitute/gatk'
 
     input:
-    tuple val(familyId), path(genomicsdb)
+    tuple val(familyId), path(gvcfFile)
     path referenceGenome
-    path broadResource
 
     output:
     tuple val(familyId), path("*genotyped.vcf.gz*")
 
     script:
-    def workspace = genomicsdb.getBaseName()
+    def exactGvcfFile = gvcfFile.find { it.name.endsWith("gvcf.gz") }
     """
     echo $familyId > file
-    mkdir /tmp/genomicsdb
-    cp -r $genomicsdb/* /tmp/genomicsdb/
-    gatk --java-options "-Xmx28g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} -V gendb:///tmp/genomicsdb -O ${familyId}.genotyped.vcf.gz -G StandardAnnotation -G AS_StandardAnnotation
+    gatk --java-options "-Xmx24g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} -V $exactGvcfFile -O ${familyId}.genotyped.vcf.gz
     """
-
 }
 
 
