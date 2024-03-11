@@ -74,7 +74,7 @@ process genotypeGVCF {
     def exactGvcfFile = gvcfFile.find { it.name.endsWith("gvcf.gz") }
     """
     echo $familyId > file
-    gatk --java-options "-Xmx24g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} -V $exactGvcfFile -O ${familyId}.genotyped.vcf.gz
+    gatk --java-options "-Xmx8g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} -V $exactGvcfFile -O ${familyId}.genotyped.vcf.gz
     """
 }
 

@@ -105,7 +105,6 @@ process applyVQSRIndel {
     label 'medium'
 
     container 'broadinstitute/gatk'
-    publishDir "${params.outputDir}", mode: 'copy'
 
     input:
     tuple val(prefix), path(recal), path(tranches), path(vcf)
