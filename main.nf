@@ -8,8 +8,6 @@ Exclude MNPs detected with bedtools
 
 process excludeMNPs{
     label 'medium'
-
-    container 'staphb/bcftools'
     
     input:
     tuple val(familyId), path(gvcfFile)
@@ -35,7 +33,6 @@ process importGVCF {
 
     label 'medium'
 
-    container 'broadinstitute/gatk'
     input:
     tuple val(familyId), path(gvcfFiles)
     path referenceGenome
@@ -49,6 +46,7 @@ process importGVCF {
 
     """
     echo $familyId > file
+    gatk -version
     gatk --java-options "-Xmx8g"  CombineGVCFs -R $referenceGenome/${params.referenceGenomeFasta} $exactGvcfFiles -O ${familyId}.combined.gvcf.gz -L ${broadResource}/${params.intervalsFile}
     """       
 
@@ -61,8 +59,6 @@ Keep only SNP and Indel
 process genotypeGVCF {
     label 'geno'
 
-    container 'broadinstitute/gatk'
-
     input:
     tuple val(familyId), path(gvcfFile)
     path referenceGenome
@@ -74,6 +70,7 @@ process genotypeGVCF {
     def exactGvcfFile = gvcfFile.find { it.name.endsWith("gvcf.gz") }
     """
     echo $familyId > file
+    gatk -version
     gatk --java-options "-Xmx8g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} -V $exactGvcfFile -O ${familyId}.genotyped.vcf.gz
     """
 }

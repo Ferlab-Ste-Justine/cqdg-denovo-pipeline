@@ -23,7 +23,7 @@ process splitMultiAllelics{
 
 process vep {
     label 'vep'
-    container 'ensemblorg/ensembl-vep'
+
     publishDir "${params.outputDir}", mode: 'copy'
 
     input:
@@ -63,7 +63,7 @@ process vep {
 
 process tabix {
     label 'tiny'
-    container 'staphb/htslib'
+
     publishDir "${params.outputDir}", mode: 'copy'
 
     input:

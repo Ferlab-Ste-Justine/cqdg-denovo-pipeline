@@ -2,7 +2,6 @@
 process variantRecalibratorSNP {
     label 'medium'
 
-    container 'broadinstitute/gatk'
 
     input:
     tuple val(prefix), path(vcf)
@@ -40,7 +39,6 @@ process variantRecalibratorSNP {
 process variantRecalibratorIndel {
     label 'medium'
 
-    container 'broadinstitute/gatk'
 
     input:
     tuple val(prefix), path(vcf)
@@ -74,7 +72,6 @@ process variantRecalibratorIndel {
 process applyVQSRSNP {
     label 'medium'
 
-    container 'broadinstitute/gatk'
 
     input:
     tuple val(prefix), path(recal), path(tranches), path(vcf)
