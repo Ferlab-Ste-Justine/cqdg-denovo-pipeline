@@ -39,15 +39,18 @@ process importGVCF {
     path broadResource
 
     output:
-    tuple val(familyId), path("*combined.gvcf.gz*")
+    tuple val(familyId), path("genomicsdb")
 
     script:
     def exactGvcfFiles = gvcfFiles.findAll { it.name.endsWith("vcf.gz") }.collect { "-V $it" }.join(' ')
 
+    /// gatk --java-options "-Xmx5g -Xms5g" GenomicsDBImport $exactGvcfFiles --genomicsdb-workspace-path genomicsdb --max-num-intervals-to-import-in-parallel 4 --genomicsdb-shared-posixfs-optimizations true --bypass-feature-reader -L ${broadResource}/${params.intervalsFile} 
     """
     echo $familyId > file
-    gatk -version
-    gatk --java-options "-Xmx8g"  CombineGVCFs -R $referenceGenome/${params.referenceGenomeFasta} $exactGvcfFiles -O ${familyId}.combined.gvcf.gz -L ${broadResource}/${params.intervalsFile}
+    cat ${broadResource}/${params.intervalsFile}  | while read chr || [[ -n $chr ]];
+    do
+        gatk --java-options "-Xmx5g -Xms5g" GenomicsDBImport $exactGvcfFiles --genomicsdb-workspace-path genomicsdb/db_${chr} --max-num-intervals-to-import-in-parallel 4 --genomicsdb-shared-posixfs-optimizations true --bypass-feature-reader -L ${chr}
+    done
     """       
 
 }    
@@ -60,17 +63,17 @@ process genotypeGVCF {
     label 'geno'
 
     input:
-    tuple val(familyId), path(gvcfFile)
+    tuple val(familyId), path(genomicsdb)
     path referenceGenome
 
     output:
     tuple val(familyId), path("*genotyped.vcf.gz*")
 
     script:
+    def workspace = genomicsdb.getBaseName
     def exactGvcfFile = gvcfFile.find { it.name.endsWith("gvcf.gz") }
     """
     echo $familyId > file
-    gatk -version
     gatk --java-options "-Xmx8g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} -V $exactGvcfFile -O ${familyId}.genotyped.vcf.gz
     """
 }
@@ -95,6 +98,17 @@ def sampleChannel() {
                 }                
 }
 
+// def interval() {
+//    Channel.fromPath(file("$params.intervalsFile"))
+//                .flatMap { it ->
+//                     files = it.tail().findAll{ c -> c?.trim() };
+//                     return files.collect{ f -> [familyId: it.first(), size: files.size(), file: f ]}; 
+//                 }.multiMap { it ->
+//                     sizes: tuple(it.familyId, it.size)
+//                     files: tuple(it.familyId, file("${it.file}*"))
+//                 }                
+// }
+
 include { variantRecalibratorSNP    } from './modules/vqsr'
 include { variantRecalibratorIndel  } from './modules/vqsr'
 include { applyVQSRSNP              } from './modules/vqsr'
@@ -112,26 +126,28 @@ workflow {
 
     sampleChannel().set{ familiesSizeFile }
 
-    filtered = excludeMNPs(familiesSizeFile.files)
-                    .join(familiesSizeFile.sizes)
-                    .map{familyId, files, size -> tuple( groupKey(familyId, size), files)}
-                    .groupTuple()
-                    .map{ familyId, files -> tuple(familyId, files.flatten())}
+
+    // filtered = excludeMNPs(familiesSizeFile.files)
+    //                 .join(familiesSizeFile.sizes)
+    //                 .map{familyId, files, size -> tuple( groupKey(familyId, size), files)}
+    //                 .groupTuple()
+    //                 .map{ familyId, files -> tuple(familyId, files.flatten())}
     
-    
-    importGVCF(filtered, referenceGenome,broad)
+    // filtered | view
 
-    vcf = genotypeGVCF(importGVCF.out, referenceGenome)
+    // importGVCF(filtered, referenceGenome,broad)
 
-    v = variantRecalibratorSNP(vcf, referenceGenome, broad).join(vcf)
-    asnp = applyVQSRSNP(v) 
+    // vcf = genotypeGVCF(importGVCF.out, referenceGenome)
 
-    indel = variantRecalibratorIndel(vcf, referenceGenome, broad).join(asnp)
-    aindel = applyVQSRIndel(indel)
+    // v = variantRecalibratorSNP(vcf, referenceGenome,broad).join(vcf)
+    // asnp = applyVQSRSNP(v) 
 
-    s = splitMultiAllelics(aindel, referenceGenome) 
+    // indel = variantRecalibratorIndel(vcf, referenceGenome, broad).join(asnp)
+    // aindel = applyVQSRIndel(indel)
 
-    vep(s, referenceGenome, vepCache) 
-    tabix(vep.out) 
+    // s = splitMultiAllelics(aindel, referenceGenome) 
+
+    // vep(s, referenceGenome, vepCache) 
+    // tabix(vep.out) 
 
 }
