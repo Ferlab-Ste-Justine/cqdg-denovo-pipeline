@@ -67,7 +67,7 @@ process genotypeGVCF {
     tuple val(familyId), path("*genotyped.vcf.gz*")
 
     script:
-    def exactGvcfFile = gvcfFile.find { it.name.endsWith("gvcf.gz") }
+    def exactGvcfFile = gvcfFile.find { it.name.endsWith("vcf.gz") }
     """
     echo $familyId > file
     gatk -version
@@ -117,12 +117,17 @@ workflow {
                     .map{familyId, files, size -> tuple( groupKey(familyId, size), files)}
                     .groupTuple()
                     .map{ familyId, files -> tuple(familyId, files.flatten())}
-    
-    
-    importGVCF(filtered, referenceGenome,broad)
 
-    vcf = genotypeGVCF(importGVCF.out, referenceGenome)
+    
+    filtered_one = filtered.filter{it[1].size() == 2}
+    filtered_mult = filtered.filter{it[1].size() > 2}
 
+    DB = importGVCF(filtered_mult, referenceGenome,broad)
+                    .concat(filtered_one)
+
+    DB.view()
+    vcf = genotypeGVCF(DB, referenceGenome)
+                        
     v = variantRecalibratorSNP(vcf, referenceGenome, broad).join(vcf)
     asnp = applyVQSRSNP(v) 
 
