@@ -16,7 +16,7 @@ process excludeMNPs{
     tuple val(familyId), path("*filtered.vcf.gz*")
 
     script:
-    def exactGvcfFile = gvcfFile.find { it.name.endsWith("gvcf.gz") }
+    def exactGvcfFile = gvcfFile.find { it.name.endsWith("vcf.gz") }
     def uuid = UUID.randomUUID().toString()
     // --regions chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,chrY
     // bcftools view --exclude-type mnps  ${exactGvcfFile} -O z -o ${familyId}.${uuid}.filtered.gvcf.gz
@@ -34,23 +34,21 @@ process importGVCF {
     label 'medium'
 
     input:
-    tuple val(familyId), path(gvcfFiles)
+    tuple val(familyId), path(gvcfFiles),val(interval)
     path referenceGenome
     path broadResource
 
     output:
-    tuple val(familyId), path("genomicsdb")
+    tuple val(familyId), path("genomicsdb*"),val(interval)
 
     script:
     def exactGvcfFiles = gvcfFiles.findAll { it.name.endsWith("vcf.gz") }.collect { "-V $it" }.join(' ')
 
-    /// gatk --java-options "-Xmx5g -Xms5g" GenomicsDBImport $exactGvcfFiles --genomicsdb-workspace-path genomicsdb --max-num-intervals-to-import-in-parallel 4 --genomicsdb-shared-posixfs-optimizations true --bypass-feature-reader -L ${broadResource}/${params.intervalsFile} 
     """
     echo $familyId > file
-    cat ${broadResource}/${params.intervalsFile}  | while read chr || [[ -n $chr ]];
-    do
-        gatk --java-options "-Xmx5g -Xms5g" GenomicsDBImport $exactGvcfFiles --genomicsdb-workspace-path genomicsdb/db_${chr} --max-num-intervals-to-import-in-parallel 4 --genomicsdb-shared-posixfs-optimizations true --bypass-feature-reader -L ${chr}
-    done
+    gatk -version
+    gatk --java-options "-Xmx5g -Xms5g" GenomicsDBImport $exactGvcfFiles --genomicsdb-workspace-path genomicsdb_${interval}  --genomicsdb-shared-posixfs-optimizations true --bypass-feature-reader -L ${interval} 
+    
     """       
 
 }    
@@ -59,26 +57,60 @@ process importGVCF {
 Keep only SNP and Indel 
 */
 
-process genotypeGVCF {
+process genotypeGVCF_multi {
     label 'geno'
 
     input:
-    tuple val(familyId), path(genomicsdb)
+    tuple val(familyId), path(genomicsdb),val(interval)
+    path referenceGenome
+
+    output:
+    tuple val(familyId), path("*${interval}*genotyped.vcf.gz*")
+
+    script:
+    """
+    echo $familyId > file
+    gatk --java-options "-Xmx5g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} --genomicsdb-shared-posixfs-optimizations true -V gendb://$genomicsdb -O ${familyId}_${interval}.genotyped.vcf.gz -G StandardAnnotation -G AS_StandardAnnotation    
+    """
+}
+
+process genotypeGVCF_solo {
+    label 'geno'
+
+    input:
+    tuple val(familyId), path(gvcfFile)
     path referenceGenome
 
     output:
     tuple val(familyId), path("*genotyped.vcf.gz*")
 
     script:
-    def workspace = genomicsdb.getBaseName
-    def exactGvcfFile = gvcfFile.find { it.name.endsWith("gvcf.gz") }
+    def exactGvcfFile = gvcfFile.find { it.name.endsWith("vcf.gz") }
     """
     echo $familyId > file
     gatk --java-options "-Xmx8g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} -V $exactGvcfFile -O ${familyId}.genotyped.vcf.gz
     """
 }
 
+process gatherVCF {
+    label 'medium'
 
+    input:
+    tuple val(familyId), path(gvcfFiles)
+
+    output:
+    tuple val(familyId), path("*gather.genotyped.vcf.gz*")
+
+    script:
+    def exactGvcfFiles = gvcfFiles.findAll { it.name.endsWith("vcf.gz") }.collect { "$it" }.join("\n")
+    // gatk --java-options "-Xmx8g" GatherVcfs $exactGvcfFiles -O ${familyId}.gather.genotyped.vcf.gz
+    """
+    echo $familyId > file
+    echo "${exactGvcfFiles}" > list_file.txt
+    bcftools concat -f list_file.txt | bcftools sort - -Oz -o ${familyId}.gather.genotyped.vcf.gz
+    bcftools index -t  ${familyId}.gather.genotyped.vcf.gz
+    """
+}
 
 
 /**
@@ -98,17 +130,6 @@ def sampleChannel() {
                 }                
 }
 
-// def interval() {
-//    Channel.fromPath(file("$params.intervalsFile"))
-//                .flatMap { it ->
-//                     files = it.tail().findAll{ c -> c?.trim() };
-//                     return files.collect{ f -> [familyId: it.first(), size: files.size(), file: f ]}; 
-//                 }.multiMap { it ->
-//                     sizes: tuple(it.familyId, it.size)
-//                     files: tuple(it.familyId, file("${it.file}*"))
-//                 }                
-// }
-
 include { variantRecalibratorSNP    } from './modules/vqsr'
 include { variantRecalibratorIndel  } from './modules/vqsr'
 include { applyVQSRSNP              } from './modules/vqsr'
@@ -126,28 +147,45 @@ workflow {
 
     sampleChannel().set{ familiesSizeFile }
 
+    filtered = excludeMNPs(familiesSizeFile.files)
+                    .join(familiesSizeFile.sizes)
+                    .map{familyId, files, size -> tuple( groupKey(familyId, size), files)}
+                    .groupTuple()
+                    .map{ familyId, files -> tuple(familyId, files.flatten())}
 
-    // filtered = excludeMNPs(familiesSizeFile.files)
-    //                 .join(familiesSizeFile.sizes)
-    //                 .map{familyId, files, size -> tuple( groupKey(familyId, size), files)}
-    //                 .groupTuple()
-    //                 .map{ familyId, files -> tuple(familyId, files.flatten())}
     
-    // filtered | view
+    filtered_one = filtered.filter{it[1].size() == 2}
+    filtered_mult = filtered.filter{it[1].size() > 2}
 
-    // importGVCF(filtered, referenceGenome,broad)
+    interval = Channel.fromPath("${params.intervalsFile}")
+            .splitText().map{it -> it.trim()}
+    
+    // Run Combine & GenotypeGVCF on family with > 1 files
+    importGVCF(filtered_mult.combine(interval), referenceGenome,broad)
+                            
+    vcf_fam = genotypeGVCF_multi(importGVCF.out, referenceGenome)
+                        .combine(interval.count())
+                        .map{familyId, files, size -> tuple( groupKey(familyId, size), files)}
+                        .groupTuple()
+                        .map{ familyId, files -> tuple(familyId, files.flatten())}
+                        //.map{ familyId, files -> tuple( familyId, files.toSortedList { it -> (it.name =~ /*_chr(.*?)/)[0][1].toInteger() })}
 
-    // vcf = genotypeGVCF(importGVCF.out, referenceGenome)
+    vcf_gather = gatherVCF(vcf_fam)
+    
+     // Run GenotypeGVCF on family with == 1 files
+    vcf_one = genotypeGVCF_solo(filtered_one, referenceGenome)
+    
+    vcf = vcf_gather.concat(vcf_one)
+    
+    v = variantRecalibratorSNP(vcf, referenceGenome, broad).join(vcf)
+    asnp = applyVQSRSNP(v) 
 
-    // v = variantRecalibratorSNP(vcf, referenceGenome,broad).join(vcf)
-    // asnp = applyVQSRSNP(v) 
+    indel = variantRecalibratorIndel(vcf, referenceGenome, broad).join(asnp)
+    aindel = applyVQSRIndel(indel)
 
-    // indel = variantRecalibratorIndel(vcf, referenceGenome, broad).join(asnp)
-    // aindel = applyVQSRIndel(indel)
+    s = splitMultiAllelics(aindel, referenceGenome) 
 
-    // s = splitMultiAllelics(aindel, referenceGenome) 
-
-    // vep(s, referenceGenome, vepCache) 
-    // tabix(vep.out) 
+    vep(s, referenceGenome, vepCache) 
+    tabix(vep.out) 
 
 }
