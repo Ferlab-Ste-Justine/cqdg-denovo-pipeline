@@ -47,7 +47,7 @@ process importGVCF {
     """
     echo $familyId > file
     gatk -version
-    gatk --java-options "-Xmx8g"  CombineGVCFs -R $referenceGenome/${params.referenceGenomeFasta} $exactGvcfFiles -O ${familyId}.combined.gvcf.gz -L ${broadResource}/${params.intervalsFile}
+    gatk --java-options "-Xmx8g"  CombineGVCFs -R $referenceGenome/${params.referenceGenomeFasta} $exactGvcfFiles -O ${familyId}.combined.gvcf.gz -L ${params.intervalsFile}
     """       
 
 }    
@@ -125,7 +125,6 @@ workflow {
     DB = importGVCF(filtered_mult, referenceGenome,broad)
                     .concat(filtered_one)
 
-    DB.view()
     vcf = genotypeGVCF(DB, referenceGenome)
                         
     v = variantRecalibratorSNP(vcf, referenceGenome, broad).join(vcf)
