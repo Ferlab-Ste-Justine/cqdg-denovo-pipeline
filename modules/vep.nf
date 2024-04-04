@@ -24,7 +24,7 @@ process splitMultiAllelics{
 process vep {
     label 'vep'
 
-    publishDir "${params.outputDir}", mode: 'copy'
+    publishDir "${params.outputDir}/${familyId}", mode: 'copy'
 
     input:
     tuple val(familyId), path(vcfFile)
