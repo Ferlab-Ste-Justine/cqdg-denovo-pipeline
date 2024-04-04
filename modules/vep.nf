@@ -64,7 +64,7 @@ process vep {
 process tabix {
     label 'tiny'
 
-    publishDir "${params.outputDir}", mode: 'copy'
+    publishDir "${params.outputDir}/${familyId}", mode: 'copy'
 
     input:
     path vcfFile
