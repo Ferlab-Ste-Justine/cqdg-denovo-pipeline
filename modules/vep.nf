@@ -32,7 +32,7 @@ process vep {
     path vepCache
 
     output:
-    path "*vep.vcf.gz"
+    tuple val(familyId), path("*vep.vcf.gz")
 
     script:
     def exactVcfFile = vcfFile.find { it.name.endsWith("vcf.gz") }
@@ -67,7 +67,7 @@ process tabix {
     publishDir "${params.outputDir}/${familyId}", mode: 'copy'
 
     input:
-    path vcfFile
+    tuple val(familyId), path(vcfFile)
 
     output:
     path "*.tbi"
