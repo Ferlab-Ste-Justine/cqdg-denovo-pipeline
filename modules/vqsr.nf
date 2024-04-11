@@ -90,9 +90,9 @@ process applyVQSRSNP {
     --recal-file ${exactRecal} \
     -mode SNP \
     --tranches-file ${tranches} \
-    --truth-sensitivity-filter-level ${params.TSfilter} \
+    --truth-sensitivity-filter-level ${params.TSfilterSNP} \
     --create-output-variant-index true \
-    -O ${prefix}.snp.vqsr_${params.TSfilter}.vcf.gz
+    -O ${prefix}.snp.vqsr_${params.TSfilterSNP}.vcf.gz
     """
 
 }
@@ -119,9 +119,9 @@ process applyVQSRIndel {
     --recal-file ${exactRecal} \
     -mode INDEL \
     --tranches-file ${tranches} \
-    --truth-sensitivity-filter-level ${params.TSfilter} \
+    --truth-sensitivity-filter-level ${params.TSfilterINDEL} \
     --create-output-variant-index true \
-    -O ${prefix}.snpindel.vqsr_${params.TSfilter}.vcf.gz
+    -O ${prefix}.snpindel.vqsr_${params.TSfilterINDEL}.vcf.gz
     """
 
 }
