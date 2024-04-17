@@ -24,7 +24,7 @@ process splitMultiAllelics{
 process vep {
     label 'vep'
 
-    publishDir "${params.outputDir}/${familyId}", mode: 'copy'
+    publishDir "${params.outputDir}", mode: 'copy'
 
     input:
     tuple val(familyId), path(vcfFile)
@@ -64,7 +64,7 @@ process vep {
 process tabix {
     label 'tiny'
 
-    publishDir "${params.outputDir}/${familyId}", mode: 'copy'
+    publishDir "${params.outputDir}", mode: 'copy'
 
     input:
     tuple val(familyId), path(vcfFile)
