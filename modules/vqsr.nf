@@ -1,4 +1,9 @@
 
+/**
+Build a recalibration model to score SNP variant quality for filtering purposes
+
+Note: pre-requisite step for applyVQSRSNP
+*/
 process variantRecalibratorSNP {
     label 'medium'
 
@@ -12,6 +17,7 @@ process variantRecalibratorSNP {
     tuple val(prefix), path("*.recal*"), path("*.tranches")
     
     script:
+    def exactVcfFile = vcf.find { it.name.endsWith("vcf.gz") }
     def tranches = ["100.0", "99.95", "99.9", "99.8", "99.6", "99.5", "99.4", "99.3", "99.0"].collect{"-tranche $it"}.join(' ')
     def annotationValues = ["QD","MQRankSum","ReadPosRankSum","FS","MQ","SOR","DP"].collect{"-an $it"}.join(' ')
     """
@@ -21,7 +27,7 @@ process variantRecalibratorSNP {
     $tranches \
     --trust-all-polymorphic \
     -R $referenceGenome/${params.referenceGenomeFasta} \
-    -V ${vcf.first()} \
+    -V ${exactVcfFile} \
     --resource:hapmap,known=false,training=true,truth=true,prior=15 \
     ${broadResource}/hapmap_3.3.hg38.vcf.gz  \
     --resource:omni,known=false,training=true,truth=false,prior=12 \
@@ -33,9 +39,13 @@ process variantRecalibratorSNP {
     --max-gaussians 6 \
     -mode SNP -O ${prefix}.recal --tranches-file ${prefix}.tranches
     """
-
 }
 
+/**
+Build a recalibration model to score Indel variant quality for filtering purposes
+
+Note: pre-requisite step for applyVQSRIndel
+*/
 process variantRecalibratorIndel {
     label 'medium'
 
@@ -49,6 +59,7 @@ process variantRecalibratorIndel {
     tuple val(prefix), path("*.recal*"), path("*.tranches")
     
     script:
+    def exactVcfFile = vcf.find { it.name.endsWith("vcf.gz") }
     def tranches = ["100.0","99.95","99.9","99.5","99.0","97.0","96.0","95.0","94.0"].collect{"-tranche $it"}.join(' ')
     def annotationValues = ["FS","ReadPosRankSum","MQRankSum","QD","SOR","DP"].collect{"-an $it"}.join(' ')
     """
@@ -57,7 +68,7 @@ process variantRecalibratorIndel {
     gatk --java-options "-Xms4G -Xmx4G -XX:ParallelGCThreads=2" VariantRecalibrator \
     $tranches \
     -R $referenceGenome/${params.referenceGenomeFasta} \
-    -V ${vcf.first()} \
+    -V ${exactVcfFile} \
     --trust-all-polymorphic \
     --resource:mills,known=false,training=true,truth=true,prior=12 ${broadResource}/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz \
     --resource:axiomPoly,known=false,training=true,truth=false,prior=10 ${broadResource}/Axiom_Exome_Plus.genotypes.all_populations.poly.hg38.vcf.gz \
@@ -66,9 +77,11 @@ process variantRecalibratorIndel {
     --max-gaussians 4 \
     -mode INDEL -O ${prefix}.recal --tranches-file ${prefix}.tranches
     """
-
 }
 
+/*
+Apply a score cutoff to filter SNP variants based on a recalibration table
+*/
 process applyVQSRSNP {
     label 'medium'
 
@@ -77,7 +90,7 @@ process applyVQSRSNP {
     tuple val(prefix), path(recal), path(tranches), path(vcf)
 
     output:
-    tuple val(prefix), path("*.snp.vqsr_${params.TSfilter}.vcf.gz*")
+    tuple val(prefix), path("*.snp.vqsr_${params.TSfilterSNP}.vcf.gz*")
 
     script:
     def exactVcfFile = vcf.find { it.name.endsWith("vcf.gz") }
@@ -97,7 +110,9 @@ process applyVQSRSNP {
 
 }
 
-
+/*
+Apply a score cutoff to filter Indel variants based on a recalibration table
+*/
 process applyVQSRIndel {
     label 'medium'
 
@@ -107,12 +122,13 @@ process applyVQSRIndel {
     tuple val(prefix), path(recal), path(tranches), path(vcf)
 
     output:
-    tuple val(prefix), path("*.snpindel.vqsr_${params.TSfilter}.vcf.gz*")
+    tuple val(prefix), path("*.snpindel.vqsr_${params.TSfilterINDEL}.vcf.gz*")
 
     script:
     def exactVcfFile = vcf.find { it.name.endsWith("vcf.gz") }
     def exactRecal = recal.find { it.name.endsWith("recal") }
     """
+    set -e
     echo $prefix > file
     gatk --java-options "-Xms4G -Xmx4G -XX:ParallelGCThreads=2" ApplyVQSR \
     -V ${exactVcfFile} \
@@ -123,26 +139,4 @@ process applyVQSRIndel {
     --create-output-variant-index true \
     -O ${prefix}.snpindel.vqsr_${params.TSfilterINDEL}.vcf.gz
     """
-
-}
-
-
-workflow {
-   referenceGenome = file(params.referenceGenome)
-    broad = file(params.broad)
-    Channel.fromFilePairs("$params.inputDir/*.vcf.gz{,.tbi}")
-        .tap{ vcfs}
-
-
-    v = variantRecalibratorSNP(vcf, referenceGenome, broad).join(vcf)
-    // v | view
-    asnp = applyVQSRSNP(v) 
-    // asnp | view
-
-    indel = variantRecalibratorIndel(vcf, referenceGenome, broad).join(asnp)
-    // indel | view
-    aindel = applyVQSRIndel(indel)
-    // aindel | view
-
-
 }
