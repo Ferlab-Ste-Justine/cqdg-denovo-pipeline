@@ -1,0 +1,20 @@
+name: Publish Image Using latest
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  push:
+    name: Publish Image using latest tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Push the image on the registry
+        uses: Ferlab-Ste-Justine/action-push-image@v2
+        with:
+          username: ${{ secrets.FERLAB_DOCKER_HUB_USER }}
+          password: ${{ secrets.FERLAB_DOCKER_HUB_TOKEN }}
+          image: ferlabcrsj/nextflow
+          tag_format: "latest"
