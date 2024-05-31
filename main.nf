@@ -205,13 +205,28 @@ process importGVCF {
     tuple val(familyId), path("*combined.gvcf.gz*")
 
     script:
+    def args = task.ext.args ?: ''
     def exactGvcfFiles = gvcfFiles.findAll { it.name.endsWith("vcf.gz") }.collect { "-V $it" }.join(' ')
+
+    def avail_mem = 3072
+    if (!task.memory) {
+        log.info '[GATK CombineGVCFs] Available memory not known - defaulting to 3GB. Specify process memory requirements to change this.'
+    } else {
+        avail_mem = (task.memory.mega*0.8).intValue()
+    }
 
     """
     echo $familyId > file
     gatk -version
-    gatk --java-options "-Xmx8g"  CombineGVCFs -R $referenceGenome/${params.referenceGenomeFasta} $exactGvcfFiles -O ${familyId}.combined.gvcf.gz -L $broadResource/${params.intervalsFile}
-    """       
+    gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
+        CombineGVCFs \\
+        -R $referenceGenome/${params.referenceGenomeFasta} \\
+        $exactGvcfFiles \\
+        -O ${familyId}.combined.gvcf.gz \\
+        -L $broadResource/${params.intervalsFile} \\
+        $args
+    """ 
+
 
     stub:
     def exactGvcfFiles = gvcfFiles.findAll { it.name.endsWith("vcf.gz") }.collect { "-V $it" }.join(' ')
@@ -236,12 +251,26 @@ process genotypeGVCF {
     tuple val(familyId), path("*genotyped.vcf.gz*")
 
     script:
+    def args = task.ext.args ?: ''
     def exactGvcfFile = gvcfFile.find { it.name.endsWith("vcf.gz") }
+
+    def avail_mem = 3072
+    if (!task.memory) {
+        log.info '[GATK GenotypeGVCFs] Available memory not known - defaulting to 3GB. Specify process memory requirements to change this.'
+    } else {
+        avail_mem = (task.memory.mega*0.8).intValue()
+    }
     """
     echo $familyId > file
     gatk -version
-    gatk --java-options "-Xmx8g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} -V $exactGvcfFile -O ${familyId}.genotyped.vcf.gz
+    gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
+        GenotypeGVCFs \\
+        -R $referenceGenome/${params.referenceGenomeFasta} \\
+        -V $exactGvcfFile \\
+        -O ${familyId}.genotyped.vcf.gz \\
+        $args
     """
+
 
     stub:
     def exactGvcfFile = gvcfFile.find { it.name.endsWith("vcf.gz") }

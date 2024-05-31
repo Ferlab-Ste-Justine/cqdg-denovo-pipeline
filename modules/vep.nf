@@ -40,29 +40,31 @@ process vep {
     tuple val(familyId), path("*vep.vcf.gz")
 
     script:
+    def args = task.ext.args ?: ''
     def exactVcfFile = vcfFile.find { it.name.endsWith("vcf.gz") }
     """
-    vep \
-    --fork ${params.vepCpu} \
-    --dir ${vepCache} \
-    --offline \
-    --cache \
-    --fasta $referenceGenome/${params.referenceGenomeFasta} \
-    --input_file $exactVcfFile \
-    --format vcf \
-    --vcf \
-    --output_file variants.${familyId}.vep.vcf.gz \
-    --compress_output bgzip \
-    --xref_refseq \
-    --variant_class \
-    --numbers \
-    --hgvs \
-    --hgvsg \
-    --canonical \
-    --symbol \
-    --flag_pick \
-    --fields "Allele,Consequence,IMPACT,SYMBOL,Feature_type,Gene,PICK,Feature,EXON,BIOTYPE,INTRON,HGVSc,HGVSp,STRAND,CDS_position,cDNA_position,Protein_position,Amino_acids,Codons,VARIANT_CLASS,HGVSg,CANONICAL,RefSeq" \
-    --no_stats
+    vep \\
+        --fork ${params.vepCpu} \\
+        --dir ${vepCache} \\
+        --offline \\
+        --cache \\
+        --fasta $referenceGenome/${params.referenceGenomeFasta} \\
+        --input_file $exactVcfFile \\
+        --format vcf \\
+        --vcf \\
+        --output_file variants.${familyId}.vep.vcf.gz \\
+        --compress_output bgzip \\
+        --xref_refseq \\
+        --variant_class \\
+        --numbers \\
+        --hgvs \\
+        --hgvsg \\
+        --canonical \\
+        --symbol \\
+        --flag_pick \\
+        --fields "Allele,Consequence,IMPACT,SYMBOL,Feature_type,Gene,PICK,Feature,EXON,BIOTYPE,INTRON,HGVSc,HGVSp,STRAND,CDS_position,cDNA_position,Protein_position,Amino_acids,Codons,VARIANT_CLASS,HGVSg,CANONICAL,RefSeq" \\
+        --no_stats \\
+        $args
     """
 
     stub:
@@ -83,8 +85,12 @@ process tabix {
     path "*.tbi"
 
     script:
+    def args = task.ext.args ?: ''
+
     """
-    tabix $vcfFile
+    tabix \\
+        $vcfFile \\
+        $args
     """
     script:
     """
