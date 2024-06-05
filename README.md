@@ -50,7 +50,7 @@ Specifically, we need a reference genome directory and filename specified with t
 
 ⚠️ _(TO DO: I think these two parameters could be combined, I don't think we use any other file than the Fasta in the referenceGenome directory.)_ ⚠️
 
-Generally, we use the Homo_sapiens_assembly38.fasta as referenceGenome (see Ressources)
+Generally, we use the Homo_sapiens_assembly38.fasta as referenceGenome (see Resources)
 
 
 
@@ -60,22 +60,51 @@ The broad directory must contain the following files:
 
 - The interval list which determines the genomic interval(s) over which we operate: filename of this list must be defined with the **intervalsFile** parameter
 - Highly validated variance ressources currently required by VQSR. ***These are currently hard coded in the pipeline!***
-  - HapMap file : hapmap_3.3.hg38.vcf.
-  - 1000G omni2.5 file : 1000G_omni2.5.hg38.vcf
-  - 1000G reference file : 1000G_phase1.snps.high_confidence.hg38.vcf
-  - SNP database : Homo_sapiens_assembly38.dbsnp138.vcf
+  - HapMap file : hapmap_3.3.hg38.vcf.gz
+  - 1000G omni2.5 file : 1000G_omni2.5.hg38.vcf.gz
+  - 1000G reference file : 1000G_phase1.snps.high_confidence.hg38.vcf.gz
+  - SNP database : Homo_sapiens_assembly38.dbsnp138.vcf.gz
+
+ 
+Finally, the vep cache directory must be specified with **vepCache**, which is usually created by vep itself on first installation.
+Generally, we only need the human files obtainable from https://ftp.ensembl.org/pub/release-112/variation/vep/homo_sapiens_vep_112_GRCh38.tar.gz
+
+
 🚧
 
 Parameters summary
 -----
-**sampleFile**: &nbsp; _Required_ &nbsp; path &nbsp; 
 
-**sampleFileFormat**: &nbsp; _Optional_ &nbsp; "V1" or "V2" &nbsp; Default: "V1"
-
-**sequencingType**: &nbsp; _Optional_ &nbsp; "WGS" or "WES" &nbsp; Default: "WGS"
-🚧
+| Parameter name | Required? | Accepted input |
+| --- | --- | --- |
+| `sampleFile` | _Required_ | file |
+| `sampleFileFormat` | _Optional_ | `V1` or `V2`, default `V1` |
+| `sequencingType` | _Optional_ | `WGS` or `WES`, default `WGS` |
+| `referenceGenome` | _Required_ | path |
+| `referenceGenomeFasta` | _Required_ | file |
+| `broad` | _Required_ | path |
+| `intervalsFile` | _Required_ | list of genome intervals |
+| `vepCache` | _Required_ | path |
 
 Pipeline Output
 -----
 🚧
 
+Resources
+-----
+The documentation of the various tools used in this workflow are available here:
+
+[Nextflow](https://www.nextflow.io/docs/latest/index.html)
+
+[bcftools](https://samtools.github.io/bcftools/bcftools.html)
+
+**GATK**:
+- [CombineGVCFs](https://gatk.broadinstitute.org/hc/en-us/articles/360037593911-CombineGVCFs)
+- [GenotypeGVCFs](https://gatk.broadinstitute.org/hc/en-us/articles/360037057852-GenotypeGVCFs)
+- [VariantRecalibrator](https://gatk.broadinstitute.org/hc/en-us/articles/360035531612-Variant-Quality-Score-Recalibration-VQSR)
+- [VariantFiltration](https://gatk.broadinstitute.org/hc/enus/articles/360041850471-VariantFiltration))
+
+[VEP](https://useast.ensembl.org/info/docs/tools/vep/script/vep_options.html)
+
+**Reference files**
+🚧
