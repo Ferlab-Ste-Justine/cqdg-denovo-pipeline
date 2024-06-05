@@ -10,6 +10,7 @@ jobs:
     name: Publish Image using tags
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
       - name: Push the image on the registry
         uses: Ferlab-Ste-Justine/action-push-image@v2
         with:
