@@ -8,6 +8,7 @@ Introduction
 
 Usage
 -----
+### Samples
 The workflow will accept sample data in two format (called V1 and V2). The path to the sample file must be specified with the "**sampleFile**" parameter.
 
 1.  The first format is used by default and looks as follows:
@@ -33,11 +34,36 @@ CONGE-345       WES       CONGE-345-01.hard-filtered.gvcf.gz   CONGE-345-02.hard
 
 The file format can be chosen with the "**sampleFileFormat**" parameter (either "V1" or "V2", default "V1").
 
-Next, if the file format is "V1", the sequencing type can be specified with the "**sequencingType**" parameter (either "WGS" or "WES", default "WGS")
+Next, if the file format is "V1", the sequencing type can be specified with the "**sequencingType**" parameter (either "WGS" for Whole Genome Sequencing or "WES" for Whole Exome Sequencing, default "WGS")
+
+> [!NOTE]
+> The sequencing type also determines the type of variant filtering the pipeline will use.
+> 
+> In the case of Whole Genome Sequencing, VQSR (Variant Quality Score Recalibration) is used (preferred method).
+> 
+> In the case of Whole Exome Sequencing, Hard-filtering needs to be used.
+
+### References
+Reference files are necessary at multiple steps of the workflow, notably for joint-genotyping,the variant effect predictor (VEP) and VQSR. 
+
+Specifically, we need a reference genome directory and filename specified with the **referenceGenome** and **referenceGenomeFasta** parameters respectively. 
+
+⚠️ _(TO DO: I think these two parameters could be combined, I don't think we use any other file than the Fasta in the referenceGenome directory.)_ ⚠️
+
+Generally, we use the Homo_sapiens_assembly38.fasta as referenceGenome (see Ressources)
 
 
 
+Next, we also need broader references, which are contained in a path defined by the **broad** parameter.
 
+The broad directory must contain the following files:
+
+- The interval list which determines the genomic interval(s) over which we operate: filename of this list must be defined with the **intervalsFile** parameter
+- Highly validated variance ressources currently required by VQSR. ***These are currently hard coded in the pipeline!***
+  - HapMap file : hapmap_3.3.hg38.vcf.
+  - 1000G omni2.5 file : 1000G_omni2.5.hg38.vcf
+  - 1000G reference file : 1000G_phase1.snps.high_confidence.hg38.vcf
+  - SNP database : Homo_sapiens_assembly38.dbsnp138.vcf
 🚧
 
 Parameters summary
