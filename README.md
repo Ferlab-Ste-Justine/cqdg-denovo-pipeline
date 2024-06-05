@@ -17,8 +17,8 @@ The workflow will accept sample data in two format (called V1 and V2). The path 
 
 _FAMILY_ID_ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; _Patient1_File_&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;_Patient2_File_&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;_Patient3_File_
 ```tsv
-CONGE-320       CONGE-320-01.hard-filtered.gvcf.gz   CONGE-320-02.hard-filtered.gvcf.gz   CONGE-320-03.hard-filtered.gvcf.gz
-CONGE-345       CONGE-345-01.hard-filtered.gvcf.gz   CONGE-345-02.hard-filtered.gvcf.gz   CONGE-345-03.hard-filtered.gvcf.gz
+CONGE-XXX       CONGE-XXX-01.hard-filtered.gvcf.gz   CONGE-XXX-02.hard-filtered.gvcf.gz   CONGE-XXX-03.hard-filtered.gvcf.gz
+CONGE-YYY       CONGE-YYY-01.hard-filtered.gvcf.gz   CONGE-YYY-02.hard-filtered.gvcf.gz   CONGE-YYY-03.hard-filtered.gvcf.gz
 ```
 
 2.  The second format is used in older data and includes the sequencing type (WGS or WES)
@@ -27,12 +27,12 @@ CONGE-345       CONGE-345-01.hard-filtered.gvcf.gz   CONGE-345-02.hard-filtered.
 
 _FAMILY_ID_ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; _SEQUENCING_TYPE_ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;_Patient1_File_&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;_Patient2_File_&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;_Patient3_File_
 ```tsv
-CONGE-320       WES       CONGE-320-01.hard-filtered.gvcf.gz   CONGE-320-02.hard-filtered.gvcf.gz   CONGE-320-03.hard-filtered.gvcf.gz
-CONGE-345       WES       CONGE-345-01.hard-filtered.gvcf.gz   CONGE-345-02.hard-filtered.gvcf.gz   CONGE-345-03.hard-filtered.gvcf.gz
+CONGE-XXX       WES       CONGE-XXX-01.hard-filtered.gvcf.gz   CONGE-XXX-02.hard-filtered.gvcf.gz   CONGE-XXX-03.hard-filtered.gvcf.gz
+CONGE-YYY       WES       CONGE-YYY-01.hard-filtered.gvcf.gz   CONGE-YYY-02.hard-filtered.gvcf.gz   CONGE-YYY-03.hard-filtered.gvcf.gz
 ```
 
 
-The file format can be chosen with the "**sampleFileFormat**" parameter (either "V1" or "V2", default "V1").
+The file format can be chosen with the "**sampleFileFormat**" parameter (either "V1" or "V2", default "V1"). Note that both types are tab-delimited (.tsv)
 
 Next, if the file format is "V1", the sequencing type can be specified with the "**sequencingType**" parameter (either "WGS" for Whole Genome Sequencing or "WES" for Whole Exome Sequencing, default "WGS")
 
