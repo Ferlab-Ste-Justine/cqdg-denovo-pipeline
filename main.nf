@@ -19,7 +19,7 @@ enum SampleFileFormat {
 }
 //Nf-core schema functions
 if (params.help) {
-    log.info paramsHelp("nextflow run cqdg-denovo-pipeline/main.nf -params-file paramsProfilesWES.json")
+    log.info paramsHelp("nextflow run Ferlab-Ste-Justine/cqdg-denovo-pipeline -r v1.0.2 -params-file params.json")
     exit 0
 }
 validateParameters()
