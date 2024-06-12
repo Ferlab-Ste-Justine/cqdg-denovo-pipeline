@@ -5,6 +5,8 @@ include { hardFiltering } from './modules/hardFilter'
 include { splitMultiAllelics        } from './modules/vep'
 include { vep                       } from './modules/vep'
 include { tabix                     } from './modules/vep'
+include { validateParameters; paramsHelp; paramsSummaryLog} from 'plugin/nf-schema'
+
 
 enum SequencingType {
     WGS,
@@ -15,6 +17,13 @@ enum SampleFileFormat {
     V1,
     V2
 }
+//Nf-core schema functions
+if (params.help) {
+    log.info paramsHelp("nextflow run Ferlab-Ste-Justine/cqdg-denovo-pipeline -r v1.0.2 -params-file params.json")
+    exit 0
+}
+validateParameters()
+log.info paramsSummaryLog(workflow)
 
 /**
 Parse the sample file (tsv) and returns the 2 following channels as a map:
