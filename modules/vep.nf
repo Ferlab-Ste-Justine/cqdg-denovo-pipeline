@@ -19,6 +19,11 @@ process splitMultiAllelics{
     bcftools view --min-ac 1 --output-type z --output ${familyId}.splitted.vcf.gz ${familyId}.normed.vcf.gz
     bcftools index -t ${familyId}.splitted.vcf.gz
     """
+    stub
+    """
+    touch ${familyId}.splitted.vcf.gz
+    touch ${familyId}.splitted.vcf.gz.tbi
+    """
 }
 
 process vep {
@@ -59,6 +64,11 @@ process vep {
     --fields "Allele,Consequence,IMPACT,SYMBOL,Feature_type,Gene,PICK,Feature,EXON,BIOTYPE,INTRON,HGVSc,HGVSp,STRAND,CDS_position,cDNA_position,Protein_position,Amino_acids,Codons,VARIANT_CLASS,HGVSg,CANONICAL,RefSeq" \
     --no_stats
     """
+
+    stub:
+    """
+    touch variants.${familyId}.vep.vcf.gz
+    """
 }
 
 process tabix {
@@ -75,6 +85,10 @@ process tabix {
     script:
     """
     tabix $vcfFile
+    """
+    script:
+    """
+    touch ${vcfFile}.tbi
     """
 
 } 

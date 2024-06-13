@@ -39,6 +39,12 @@ process variantRecalibratorSNP {
     --max-gaussians 6 \
     -mode SNP -O ${prefix}.recal --tranches-file ${prefix}.tranches
     """
+
+    stub:
+    """
+    touch ${prefix}.recal
+    touch ${prefix}.tranches
+    """
 }
 
 /**
@@ -77,6 +83,12 @@ process variantRecalibratorIndel {
     --max-gaussians 4 \
     -mode INDEL -O ${prefix}.recal --tranches-file ${prefix}.tranches
     """
+
+    stub:
+    """
+    touch ${prefix}.recal
+    touch ${prefix}.tranches
+    """
 }
 
 /*
@@ -106,6 +118,10 @@ process applyVQSRSNP {
     --truth-sensitivity-filter-level ${params.TSfilterSNP} \
     --create-output-variant-index true \
     -O ${prefix}.snp.vqsr_${params.TSfilterSNP}.vcf.gz
+    """
+    stub:
+    """
+    touch ${prefix}.snp.vqsr_${params.TSfilterSNP}.vcf.gz
     """
 
 }
@@ -138,5 +154,9 @@ process applyVQSRIndel {
     --truth-sensitivity-filter-level ${params.TSfilterINDEL} \
     --create-output-variant-index true \
     -O ${prefix}.snpindel.vqsr_${params.TSfilterINDEL}.vcf.gz
+    """
+    stub:
+    """
+    touch ${prefix}.snpindel.vqsr_${params.TSfilterINDEL}.vcf.gz
     """
 }
