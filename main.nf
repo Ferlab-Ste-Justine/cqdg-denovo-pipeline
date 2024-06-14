@@ -183,7 +183,6 @@ process excludeMNPs {
     def exactGvcfFile = gvcfFile.find { it.name.endsWith("vcf.gz") }
     def uuid = UUID.randomUUID().toString()
     """
-    echo ${exactGvcfFile} > file
     touch ${familyId}.${uuid}.filtered.vcf.gz
     touch ${familyId}.${uuid}.filtered.vcf.gz.tbi
     """
