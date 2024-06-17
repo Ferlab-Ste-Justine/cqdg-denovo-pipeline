@@ -18,9 +18,18 @@ process variantRecalibratorSNP {
     
     script:
     def args = task.ext.args ?: ''
+    def args = task.ext.args ?: ''
     def exactVcfFile = vcf.find { it.name.endsWith("vcf.gz") }
     def tranches = ["100.0", "99.95", "99.9", "99.8", "99.6", "99.5", "99.4", "99.3", "99.0"].collect{"-tranche $it"}.join(' ')
     def annotationValues = ["QD","MQRankSum","ReadPosRankSum","FS","MQ","SOR","DP"].collect{"-an $it"}.join(' ')
+
+    def avail_mem = 3072
+    if (!task.memory) {
+        log.info '[GATK VariantRecalibrator] Available memory not known - defaulting to 3GB. Specify process memory requirements to change this.'
+    } else {
+        avail_mem = (task.memory.mega*0.8).intValue()
+    }
+
 
     def avail_mem = 3072
     if (!task.memory) {
@@ -87,6 +96,13 @@ process variantRecalibratorIndel {
     } else {
         avail_mem = (task.memory.mega*0.8).intValue()
     }
+
+    def avail_mem = 3072
+    if (!task.memory) {
+        log.info '[GATK VariantRecalibrator] Available memory not known - defaulting to 3GB. Specify process memory requirements to change this.'
+    } else {
+        avail_mem = (task.memory.mega*0.8).intValue()
+    }
     """
     set -e
     echo $prefix > file
@@ -129,8 +145,16 @@ process applyVQSRSNP {
 
     script:
     def args = task.ext.args ?: ''
+    def args = task.ext.args ?: ''
     def exactVcfFile = vcf.find { it.name.endsWith("vcf.gz") }
     def exactRecal = recal.find { it.name.endsWith("recal") }
+
+    def avail_mem = 3072
+    if (!task.memory) {
+        log.info '[GATK ApplyVQSR] Available memory not known - defaulting to 3GB. Specify process memory requirements to change this.'
+    } else {
+        avail_mem = (task.memory.mega*0.8).intValue()
+    }
 
     def avail_mem = 3072
     if (!task.memory) {
@@ -187,19 +211,13 @@ process applyVQSRIndel {
     """
     set -e
     echo $prefix > file
-    gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
-        ApplyVQSR \\
-        -V ${exactVcfFile} \\
-        --recal-file ${exactRecal} \\
-        -mode INDEL \\
-        --tranches-file ${tranches} \\
-        --truth-sensitivity-filter-level ${params.TSfilterINDEL} \\
-        --create-output-variant-index true \\
-        -O ${prefix}.snpindel.vqsr_${params.TSfilterINDEL}.vcf.gz \\
-        $args
-    """
-    stub:
-    """
-    touch ${prefix}.snpindel.vqsr_${params.TSfilterINDEL}.vcf.gz
+    gatk --java-options "-Xms4G -Xmx4G -XX:ParallelGCThreads=2" ApplyVQSR \
+    -V ${exactVcfFile} \
+    --recal-file ${exactRecal} \
+    -mode INDEL \
+    --tranches-file ${tranches} \
+    --truth-sensitivity-filter-level ${params.TSfilterINDEL} \
+    --create-output-variant-index true \
+    -O ${prefix}.snpindel.vqsr_${params.TSfilterINDEL}.vcf.gz
     """
 }

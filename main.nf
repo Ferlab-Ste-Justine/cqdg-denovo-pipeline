@@ -206,7 +206,15 @@ process importGVCF {
 
     script:
     def args = task.ext.args ?: ''
+    def args = task.ext.args ?: ''
     def exactGvcfFiles = gvcfFiles.findAll { it.name.endsWith("vcf.gz") }.collect { "-V $it" }.join(' ')
+
+    def avail_mem = 3072
+    if (!task.memory) {
+        log.info '[GATK CombineGVCFs] Available memory not known - defaulting to 3GB. Specify process memory requirements to change this.'
+    } else {
+        avail_mem = (task.memory.mega*0.8).intValue()
+    }
 
     def avail_mem = 3072
     if (!task.memory) {

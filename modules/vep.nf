@@ -41,6 +41,7 @@ process vep {
 
     script:
     def args = task.ext.args ?: ''
+    def args = task.ext.args ?: ''
     def exactVcfFile = vcfFile.find { it.name.endsWith("vcf.gz") }
     """
     vep \\
