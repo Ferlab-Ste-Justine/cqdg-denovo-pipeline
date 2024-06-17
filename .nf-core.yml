@@ -1,0 +1,8 @@
+repository_type: pipeline
+
+lint:
+#Put here every test we wish to ignore
+    files_unchanged:
+        - CODE_OF_CONDUCT.md
+    files_exist:
+        - CODE_OF_CONDUCT.md

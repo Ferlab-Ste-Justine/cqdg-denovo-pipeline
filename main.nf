@@ -1,10 +1,10 @@
 nextflow.enable.dsl = 2
 
-include { VQSR } from "./subworkflows/vqsr"
-include { hardFiltering } from './modules/hardFilter'
-include { splitMultiAllelics        } from './modules/vep'
-include { vep                       } from './modules/vep'
-include { tabix                     } from './modules/vep'
+include { VQSR                      } from "./subworkflows/vqsr"
+include { hardFiltering             } from './modules/local/hardFilter'
+include { splitMultiAllelics        } from './modules/local/vep'
+include { vep                       } from './modules/local/vep'
+include { tabix                     } from './modules/local/vep'
 include { validateParameters; paramsHelp; paramsSummaryLog} from 'plugin/nf-schema'
 
 

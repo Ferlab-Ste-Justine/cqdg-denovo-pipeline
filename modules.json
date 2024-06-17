@@ -1,0 +1,17 @@
+{
+  "name": "cqdg/cqdg-denovo-pipeline",
+  "homePage": "https://github.com/Ferlab-Ste-Justine/cqdg-denovo-pipeline",
+  "repos": {
+    "https://github.com/nf-core/modules.git": {
+      "modules": {
+        "nf-core": {
+          "gatk4/applyvqsr": {
+            "branch": "master",
+            "git_sha": "cee8fe33d3ef1a220dee67dac75a32f7c872f63f",
+            "installed_by": ["modules"]
+          }
+        }
+      }
+    }
+  }
+}
