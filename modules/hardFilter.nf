@@ -19,4 +19,8 @@ process hardFiltering {
     ${filterOptions} \
      -O  ${prefixId}.hardfilter.vcf.gz
     """
+    stub:
+    """
+    touch ${prefixId}.hardfilter.vcf.gz
+    """
 }

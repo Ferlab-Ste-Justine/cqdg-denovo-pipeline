@@ -178,6 +178,15 @@ process excludeMNPs {
     bcftools filter -e 'strlen(REF)>1 & strlen(REF)==strlen(ALT) & TYPE="snp"' ${exactGvcfFile} | bcftools norm -d any -O z -o ${familyId}.${uuid}.filtered.vcf.gz
     bcftools index -t ${familyId}.${uuid}.filtered.vcf.gz
     """
+    stub:
+
+    def exactGvcfFile = gvcfFile.find { it.name.endsWith("vcf.gz") }
+    def uuid = UUID.randomUUID().toString()
+    """
+    touch ${familyId}.${uuid}.filtered.vcf.gz
+    touch ${familyId}.${uuid}.filtered.vcf.gz.tbi
+    """
+
 }
 
 /**
@@ -203,6 +212,14 @@ process importGVCF {
     gatk -version
     gatk --java-options "-Xmx8g"  CombineGVCFs -R $referenceGenome/${params.referenceGenomeFasta} $exactGvcfFiles -O ${familyId}.combined.gvcf.gz -L $broadResource/${params.intervalsFile}
     """       
+
+    stub:
+    def exactGvcfFiles = gvcfFiles.findAll { it.name.endsWith("vcf.gz") }.collect { "-V $it" }.join(' ')
+
+    """
+    touch ${familyId}.combined.gvcf.gz
+    """       
+
 }    
 
 /**
@@ -225,6 +242,12 @@ process genotypeGVCF {
     gatk -version
     gatk --java-options "-Xmx8g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} -V $exactGvcfFile -O ${familyId}.genotyped.vcf.gz
     """
+
+    stub:
+    def exactGvcfFile = gvcfFile.find { it.name.endsWith("vcf.gz") }
+    """
+    touch ${familyId}.genotyped.vcf.gz
+    """
 }
 
 workflow {
@@ -242,7 +265,6 @@ workflow {
                     .map{familyId, files, meta -> tuple( groupKey(familyId, meta.size), files)}
                     .groupTuple()
                     .map{ familyId, files -> tuple(familyId, files.flatten())}
-     
     //Using 2 as threshold because we have 2 files per patient (gcvf.gz, gvcf.gz.tbi)
     filtered_one = filtered.filter{it[1].size() == 2}
     filtered_mult = filtered.filter{it[1].size() > 2}

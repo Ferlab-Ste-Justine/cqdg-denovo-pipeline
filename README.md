@@ -69,6 +69,8 @@ The broad directory must contain the following files:
 Finally, the vep cache directory must be specified with **vepCache**, which is usually created by vep itself on first installation.
 Generally, we only need the human files obtainable from https://ftp.ensembl.org/pub/release-112/variation/vep/homo_sapiens_vep_112_GRCh38.tar.gz
 
+### Stub run
+The -stub-run option can be added to run the "stub" block of processes instead of the "script" block. This can be helpful for testing.
 
 🚧
 
