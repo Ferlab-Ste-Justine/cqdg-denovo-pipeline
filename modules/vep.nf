@@ -19,7 +19,8 @@ process splitMultiAllelics{
     bcftools view --min-ac 1 --output-type z --output ${familyId}.splitted.vcf.gz ${familyId}.normed.vcf.gz
     bcftools index -t ${familyId}.splitted.vcf.gz
     """
-    stub
+
+    stub:
     """
     touch ${familyId}.splitted.vcf.gz
     touch ${familyId}.splitted.vcf.gz.tbi
