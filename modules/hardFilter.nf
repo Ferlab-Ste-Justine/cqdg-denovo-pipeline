@@ -10,6 +10,7 @@ process hardFiltering {
 
     script:
     def args = task.ext.args ?: ''
+    def argsjava = task.ext.args ?: ''
     def exactVcfFile = vcf.find { it.name.endsWith("vcf.gz") }
     def filterOptions = filters.collect{ "-filter \"${it.expression}\" --filter-name \"${it.name}\"" }.join(" ")
 
@@ -23,7 +24,7 @@ process hardFiltering {
     """
     set -e
 
-    gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
+    gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData $argsjava" \\
         VariantFiltration \\
         -V ${exactVcfFile} \\
         ${filterOptions} \\

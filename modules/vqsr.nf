@@ -18,6 +18,7 @@ process variantRecalibratorSNP {
     
     script:
     def args = task.ext.args ?: ''
+    def argsjava = task.ext.args ?: ''
     def exactVcfFile = vcf.find { it.name.endsWith("vcf.gz") }
     def tranches = ["100.0", "99.95", "99.9", "99.8", "99.6", "99.5", "99.4", "99.3", "99.0"].collect{"-tranche $it"}.join(' ')
     def annotationValues = ["QD","MQRankSum","ReadPosRankSum","FS","MQ","SOR","DP"].collect{"-an $it"}.join(' ')
@@ -32,7 +33,7 @@ process variantRecalibratorSNP {
     """
     set -e
     echo $prefix > file
-    gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
+    gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData $argsjava" \\
         VariantRecalibrator \\
         $tranches \\ 
         --trust-all-polymorphic \\
@@ -77,6 +78,7 @@ process variantRecalibratorIndel {
     
     script:
     def args = task.ext.args ?: ''
+    def argsjava = task.ext.args ?: ''
     def exactVcfFile = vcf.find { it.name.endsWith("vcf.gz") }
     def tranches = ["100.0","99.95","99.9","99.5","99.0","97.0","96.0","95.0","94.0"].collect{"-tranche $it"}.join(' ')
     def annotationValues = ["FS","ReadPosRankSum","MQRankSum","QD","SOR","DP"].collect{"-an $it"}.join(' ')
@@ -90,7 +92,7 @@ process variantRecalibratorIndel {
     """
     set -e
     echo $prefix > file
-    gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
+    gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData $argsjava" \\
         VariantRecalibrator \\
         $tranches \\
         -R $referenceGenome/${params.referenceGenomeFasta} \\
@@ -129,6 +131,7 @@ process applyVQSRSNP {
 
     script:
     def args = task.ext.args ?: ''
+    def argsjava = task.ext.args ?: ''
     def exactVcfFile = vcf.find { it.name.endsWith("vcf.gz") }
     def exactRecal = recal.find { it.name.endsWith("recal") }
 
@@ -141,7 +144,7 @@ process applyVQSRSNP {
     """
     set -e
     echo $prefix > file
-    gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
+    gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData $argsjava" \\
         ApplyVQSR \\
         -V ${exactVcfFile} \\
         --recal-file ${exactRecal} \\
@@ -175,6 +178,7 @@ process applyVQSRIndel {
 
     script:
     def args = task.ext.args ?: ''
+    def argsjava = task.ext.args ?: ''
     def exactVcfFile = vcf.find { it.name.endsWith("vcf.gz") }
     def exactRecal = recal.find { it.name.endsWith("recal") }
 
@@ -187,7 +191,7 @@ process applyVQSRIndel {
     """
     set -e
     echo $prefix > file
-    gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
+    gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData $argsjava" \\
         ApplyVQSR \\
         -V ${exactVcfFile} \\
         --recal-file ${exactRecal} \\

@@ -206,6 +206,7 @@ process importGVCF {
 
     script:
     def args = task.ext.args ?: ''
+    def argsjava = task.ext.args ?: ''
     def exactGvcfFiles = gvcfFiles.findAll { it.name.endsWith("vcf.gz") }.collect { "-V $it" }.join(' ')
 
     def avail_mem = 3072
@@ -219,7 +220,7 @@ process importGVCF {
     """
     echo $familyId > file
     gatk -version
-    gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
+    gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData $argsjava" \\
         CombineGVCFs \\
         -R $referenceGenome/${params.referenceGenomeFasta} \\
         $exactGvcfFiles \\
@@ -253,6 +254,7 @@ process genotypeGVCF {
 
     script:
     def args = task.ext.args ?: ''
+    def argsjava = task.ext.args ?: ''
     def exactGvcfFile = gvcfFile.find { it.name.endsWith("vcf.gz") }
 
     def avail_mem = 3072
@@ -264,7 +266,7 @@ process genotypeGVCF {
     """
     echo $familyId > file
     gatk -version
-    gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
+    gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData $argsjava" \\
         GenotypeGVCFs \\
         -R $referenceGenome/${params.referenceGenomeFasta} \\
         -V $exactGvcfFile \\
