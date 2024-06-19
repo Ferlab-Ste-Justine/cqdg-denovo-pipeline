@@ -1,3 +1,5 @@
 .nextflow*
 work
 test.nf
+nextflow-test.config
+.DS_Store
