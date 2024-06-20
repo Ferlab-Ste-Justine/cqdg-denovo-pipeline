@@ -4,3 +4,4 @@ test.nf
 nextflow-test.config
 .DS_Store 
 venv
+results
