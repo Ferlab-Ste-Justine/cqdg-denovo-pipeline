@@ -240,7 +240,7 @@ process genotypeGVCF {
     """
     echo $familyId > file
     gatk -version
-    gatk --java-options "-Xmx8g" GenotypeGVCFs -R $referenceGenome/${params.referenceGenomeFasta} -V $exactGvcfFile -O ${familyId}.genotyped.vcf.gz
+    gatk --java-options "-Xmx8g" GenotypeGVCFs --allow-old-rms-mapping-quality-annotation-data -R $referenceGenome/${params.referenceGenomeFasta} -V $exactGvcfFile -O ${familyId}.genotyped.vcf.gz
     """
 
     stub:
