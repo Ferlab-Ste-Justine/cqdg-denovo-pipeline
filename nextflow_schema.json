@@ -5,136 +5,145 @@
   "description": "",
   "type": "object",
   "properties": {
-      "help": {
-          "type": "string",
-          "description": "Select option --help when running to get help for each parameter"
-      }
+    "help": {
+      "type": "string",
+      "description": "Select option --help when running to get help for each parameter"
+    }
   },
   "definitions": {
-      "input_outputs": {
-          "title": "Input/Outputs",
-          "type": "object",
-          "description": "Paths for sample input and Outputs",
-          "default": "",
-          "properties": {
-              "sampleFile": {
-                  "type": "string",
-                  "description": "Path to the .tsv sample file, of format V1 or V2, containing the Family ID and path to GVCF files",
-                  "pattern": "^\\S+\\.tsv$",
-                  "format": "file-path",
-                  "help_text": "Supply the path and filename of the sample file. The file must be tab delimited, including the family ID in the first column, then the path to the .gvcf.gz files of each family member in each following column. \nIf the sampleFileFormat is \"V2\", the format is similar but the second column must be the sequencing type \"WES\" or \"WGS\""
-              },
-              "outputDir": {
-                  "type": "string",
-                  "description": "Directory for the outputs files, including the reports",
-                  "format": "directory-path"
-              }
-          },
-          "required": [
-              "sampleFile",
-              "outputDir"
-          ]
+    "input_outputs": {
+      "title": "Input/Outputs",
+      "type": "object",
+      "description": "Paths for sample input and Outputs",
+      "default": "",
+      "properties": {
+        "sampleFile": {
+          "type": "string",
+          "description": "Path to the .tsv sample file, of format V1 or V2, containing the Family ID and path to GVCF files",
+          "pattern": "^\\S+\\.tsv$",
+          "format": "file-path",
+          "help_text": "Supply the path and filename of the sample file. The file must be tab delimited, including the family ID in the first column, then the path to the .gvcf.gz files of each family member in each following column. \nIf the sampleFileFormat is \"V2\", the format is similar but the second column must be the sequencing type \"WES\" or \"WGS\""
+        },
+        "outputDir": {
+          "type": "string",
+          "description": "Directory for the outputs files, including the reports",
+          "format": "directory-path"
+        },
+        "sampleFileFormat": {
+          "type": "string",
+          "description": "The format of the sample file, either \"V1\" or \"V2\"",
+          "enum": ["V1", "V2"],
+          "help_text": "See our README for more information about the two file format: https://github.com/Ferlab-Ste-Justine/cqdg-denovo-pipeline"
+        },
+        "sequencingType": {
+          "type": "string",
+          "description": "Either \"WGS\" for Whole Genome Sequencing or \"WES\" for Whole Exome Sequencing",
+          "enum": ["WGS", "WES"]
+        }
       },
-      "references": {
-          "title": "References",
-          "type": "object",
-          "description": "",
-          "default": "",
-          "properties": {
-              "referenceGenome": {
-                  "type": "string",
-                  "description": "Directory containing the referenceGenomeFasta",
-                  "format": "directory-path",
-                  "help_text": "Contains the path to the directory that contains the reference fasta genome. "
-              },
-              "broad": {
-                  "type": "string",
-                  "description": "Directory containing the references for vqsr and the intervalsFile",
-                  "help_text": "Path to the directory containing 5 important files: \n1. The intervalsFile whose name is defined in the intervalsFile parameter\n2. The Hapmap file for vqsr training\n3. The omni2.5 file for vqsr training\n4. The 1000G SNP reference file for vqsr training\n5. The dbsnp database for vqsr training",
-                  "format": "directory-path"
-              },
-              "vepCache": {
-                  "type": "string",
-                  "description": "Directory of the vepCache",
-                  "help_text": "Path to the vepCache directory, which is usually installed by vep by default. It should contain at least the homo_sapien/111_GRCh38/ directory. ",
-                  "format": "directory-path"
-              },
-              "intervalsFile": {
-                  "type": "string",
-                  "description": "Namefile of the genome interval we want to use",
-                  "help_text": "Used during the CombineGVCFs step to indicate the regions of interest"
-              }
-          },
-          "required": [
-              "referenceGenome",
-              "broad",
-              "vepCache",
-              "intervalsFile"
-          ]
+      "required": ["sampleFile", "outputDir"]
+    },
+    "references": {
+      "title": "References",
+      "type": "object",
+      "description": "Paths to reference files",
+      "default": "",
+      "properties": {
+        "referenceGenome": {
+          "type": "string",
+          "description": "Directory containing the referenceGenomeFasta",
+          "format": "directory-path",
+          "help_text": "Contains the path to the directory that contains the reference fasta genome. "
+        },
+        "broad": {
+          "type": "string",
+          "description": "Directory containing the references for vqsr and the intervalsFile",
+          "help_text": "Path to the directory containing 5 important files: \n1. The intervalsFile whose name is defined in the intervalsFile parameter\n2. The Hapmap file for vqsr training\n3. The omni2.5 file for vqsr training\n4. The 1000G SNP reference file for vqsr training\n5. The dbsnp database for vqsr training",
+          "format": "directory-path"
+        },
+        "vepCache": {
+          "type": "string",
+          "description": "Directory of the vepCache",
+          "help_text": "Path to the vepCache directory, which is usually installed by vep by default. It should contain at least the homo_sapien/111_GRCh38/ directory. ",
+          "format": "directory-path"
+        },
+        "intervalsFile": {
+          "type": "string",
+          "description": "Namefile of the genome interval we want to use",
+          "help_text": "Used during the CombineGVCFs step to indicate the regions of interest"
+        }
       },
-      "new_group_3": {
-          "title": "New Group 3",
-          "type": "object",
-          "description": "",
-          "default": "",
-          "properties": {
-              "sampleFileFormat": {
-                  "type": "string",
-                  "description": "The format of the sample file, either \"V1\" or \"V2\"",
-                  "enum": [
-                      "V1",
-                      "V2"
-                  ],
-                  "help_text": "See our README for more information about the two file format: https://github.com/Ferlab-Ste-Justine/cqdg-denovo-pipeline",
-                  "default": "V1"
-              },
-              "vepCpu": {
-                  "type": "integer",
-                  "default": 4,
-                  "description": "Determines the -fork option that will be used for rep",
-                  "help_text": "Allows forking during the vet step, to make it faster"
-              },
-              "TSfilterSNP": {
-                  "type": "string",
-                  "default": "99",
-                  "description": "Truth-sensitivity filter level for SNPs",
-                  "help_text": "This value is required by the VQSR step"
-              },
-              "TSfilterINDEL": {
-                  "type": "string",
-                  "default": "99",
-                  "help_text": "This value is required by the VQSR step",
-                  "description": "Truth-sensitivity filter level for Indels"
-              },
-              "hardFilters": {
-                  "type": "array",
-                  "description": "Parameters for Hard-Filtering",
-                  "help_text": "Must be an array containing each desired filter. Each filter must be formatted with the desired name and expression, for example\n[[name: 'QD1', expression: 'QD < 1.0'],[name: 'QD2', expression: 'QD < 2.0]]"
-              },
-              "sequencingType": {
-                  "type": "string",
-                  "description": "Either \"WGS\" for Whole Genome Sequencing or \"WES\" for Whole Exome Sequencing",
-                  "default": "WGS",
-                  "enum": [
-                      "WGS",
-                      "WES"
-                  ]
-              }
-          },
-          "required": [
-              "hardFilters"
-          ]
+      "required": ["referenceGenome", "broad", "vepCache", "intervalsFile"]
+    },
+    "process_specific": {
+      "title": "Process-specific",
+      "type": "object",
+      "description": "Options specific for certain processes",
+      "default": "",
+      "properties": {
+        "TSfilterSNP": {
+          "type": "string",
+          "default": "99",
+          "description": "Truth-sensitivity filter level for SNPs",
+          "help_text": "This value is required by the VQSR step"
+        },
+        "TSfilterINDEL": {
+          "type": "string",
+          "default": "99",
+          "help_text": "This value is required by the VQSR step",
+          "description": "Truth-sensitivity filter level for Indels"
+        },
+        "hardFilters": {
+          "type": "array",
+          "description": "Parameters for Hard-Filtering",
+          "help_text": "Must be an array containing each desired filter. Each filter must be formatted with the desired name and expression, for example\n[[name: 'QD1', expression: 'QD < 1.0'],[name: 'QD2', expression: 'QD < 2.0]]"
+        }
+      },
+      "required": ["hardFilters"]
+    },
+    "resources": {
+      "title": "Resources",
+      "type": "object",
+      "description": "Computer resources for each task",
+      "default": "",
+      "properties": {
+        "max_cpus": {
+          "type": "integer",
+          "description": "Is redefined by process by default"
+        },
+        "max_time": {
+          "type": "string",
+          "description": "Is redefined by process by default"
+        },
+        "max_memory": {
+          "type": "string",
+          "description": "Is redefined by process by default"
+        },
+        "max_disk": {
+          "type": "string",
+          "description": "Is redefined by process by default"
+        },
+        "vepCpu": {
+          "type": "integer",
+          "default": 4,
+          "description": "Determines the -fork option that will be used for rep",
+          "help_text": "Allows forking during the vet step, to make it faster"
+        }
       }
+    }
   },
   "allOf": [
-      {
-          "$ref": "#/definitions/input_outputs"
-      },
-      {
-          "$ref": "#/definitions/references"
-      },
-      {
-          "$ref": "#/definitions/new_group_3"
-      }
+    {
+      "$ref": "#/definitions/input_outputs"
+    },
+    {
+      "$ref": "#/definitions/references"
+    },
+    {
+      "$ref": "#/definitions/process_specific"
+    },
+    {
+      "$ref": "#/definitions/resources"
+    }
   ]
 }
