@@ -109,19 +109,23 @@
       "properties": {
         "max_cpus": {
           "type": "integer",
-          "description": "Is redefined by process by default"
+          "description": "Is redefined by process by default",
+          "default": 16
         },
         "max_time": {
           "type": "string",
-          "description": "Is redefined by process by default"
+          "description": "Is redefined by process by default",
+          "default": "12h"
         },
         "max_memory": {
           "type": "string",
-          "description": "Is redefined by process by default"
+          "description": "Is redefined by process by default",
+          "default": "120 GB"
         },
         "max_disk": {
           "type": "string",
-          "description": "Is redefined by process by default"
+          "description": "Is redefined by process by default",
+          "default": "80 GB"
         },
         "vepCpu": {
           "type": "integer",
