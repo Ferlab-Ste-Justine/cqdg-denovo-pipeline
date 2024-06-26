@@ -1,4 +1,4 @@
-include { variantRecalibratorIndel; variantRecalibratorSNP; applyVQSRIndel; applyVQSRSNP} from '../../modules/vqsr'
+include { variantRecalibratorIndel; variantRecalibratorSNP; applyVQSRIndel; applyVQSRSNP} from '../../modules/local/vqsr'
 
 /**
 Filter out probable artifacts from the callset using the Variant Quality Score Recalibration (VQSR) procedure
